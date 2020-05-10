@@ -12,7 +12,7 @@
     
     
     <item>
-      <title>Networking</title>
+      <title>Kubernetes networking</title>
       <link>http://knabben.github.io/posts/kube-net/</link>
       <pubDate>Sat, 28 Dec 2019 23:00:00 +0000</pubDate>
       
@@ -21,7 +21,7 @@
     </item>
     
     <item>
-      <title>Deployment</title>
+      <title>Kubernetes deployment</title>
       <link>http://knabben.github.io/posts/kube-depl/</link>
       <pubDate>Sat, 28 Dec 2019 11:00:00 +0000</pubDate>
       
@@ -30,7 +30,7 @@
     </item>
     
     <item>
-      <title>Container</title>
+      <title>Kubernetes container</title>
       <link>http://knabben.github.io/posts/kube-container/</link>
       <pubDate>Sat, 28 Dec 2019 10:00:00 +0000</pubDate>
       
@@ -39,7 +39,7 @@
     </item>
     
     <item>
-      <title>Pod Spec</title>
+      <title>Pod specification</title>
       <link>http://knabben.github.io/posts/kube-pod/</link>
       <pubDate>Fri, 27 Dec 2019 15:00:00 +0000</pubDate>
       
