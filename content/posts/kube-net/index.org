@@ -1,4 +1,4 @@
-#+TITLE: Networking
+#+TITLE: Kubernetes networking
 #+DATE: 2019-12-28T23:00:00Z
 
 ** Networking
