@@ -1,0 +1,195 @@
+#+TITLE: Deployment
+#+DATE: 2019-12-28T11:00:00Z
+
+** [[https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/api/apps/v1/types.go#L705][ReplicaSets]]
+
+A ReplicaSet’s purpose is to maintain a stable set of replica Pods running at any given time. So, starting with the ReplicaSetSpec.
+
+{{<highlight golang>}}
+// ReplicaSetSpec is the specification of a ReplicaSet.
+type ReplicaSetSpec struct {
+	// Replicas is the number of desired replicas.
+	// More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/#what-is-a-replicationcontroller
+	Replicas *int32 `json:"replicas,omitempty"`
+
+	// Minimum number of seconds for which a newly created pod should be ready without any of its container crashing, for it to be considered available.
+	MinReadySeconds int32 `json:"minReadySeconds,omitempty"`
+
+	// Selector is a label query over pods that should match the replica count.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+	Selector *metav1.LabelSelector `json:"selector"`
+
+	// Template is the object that describes the pod that will be created if insufficient replicas are detected.
+	// More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#pod-template
+	Template v1.PodTemplateSpec `json:"template,omitempty"`
+}
+{{</highlight>}}
+
+*** Example
+
+ {{<highlight yaml>}}
+ apiVersion: apps/v1
+ kind: ReplicaSet
+ metadata:
+   name: frontend
+   labels:
+     tier: frontend
+ spec:
+   replicas: 3
+   selector:
+     matchLabels:
+       tier: frontend
+   template:
+     metadata:
+       labels:
+         tier: frontend
+     spec:
+       containers:
+       - name: php-redis
+         image: gcr.io/google_samples/gb-frontend:v3
+ {{</highlight>}}
+
+ For the explanation the selector field must match the same label of your Pods, it means you can reuse already existent pods on this match
+ if the replicas is increased it uses the template PodSpec to create new ones, until it hits the desired number.
+
+*** Template
+
+ Basically the template is a call for the PodSpec, so the definition follows the same
+
+ {{<highlight golang>}}
+ // PodTemplateSpec describes the data a pod should have when created from a template
+ type PodTemplateSpec struct {
+	 // Standard object's metadata.
+	 // More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+	 // +optional
+	 metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	 // Specification of the desired behavior of the pod.
+	 // More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	 // +optional
+	 Spec PodSpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
+ }
+ {{</highlight>}}
+
+*** kube-controller ReplicaSet
+
+ After the object enters the API server, the next to watch the event is the controller, more specifically the [[https://github.com/kubernetes/kubernetes/blob/master/pkg/controller/replicaset/replica_set.go][replicaset]].
+
+
+ {{<highlight golang>}}
+ func (rsc *ReplicaSetController) manageReplicas(filteredPods []*v1.Pod, rs *apps.ReplicaSet) error {
+     diff := len(filteredPods) - int(*(rs.Spec.Replicas))
+     rsKey, err := controller.KeyFunc(rs)
+     if diff < 0 {
+         // create pods - rsc.podControl.CreatePodsWithControllerRef
+     } else if diff > 0 {
+         // delete pods - rsc.podControl.DeletePod
+     }
+ }
+ {{</highlight>}}
+
+ If you want to give a deeper dive on [[https://github.com/vmware-tanzu/tgik/blob/master/episodes/093/README.md][it]].
+
+** Deployments
+
+A Deployment provides declarative updates for Pods and ReplicaSets.
+
+You describe a desired state in a Deployment, and the Deployment Controller changes the actual state to the desired state at a controlled rate.
+You can define Deployments to create new ReplicaSets, or to remove existing Deployments and adopt all their resources with new Deployments.
+
+{{<highlight golang>}}
+// DeploymentSpec is the specification of the desired behavior of the Deployment.
+type DeploymentSpec struct {
+	// Number of desired pods.
+	Replicas *int32 `json:"replicas,omitempty"`
+
+	// Label selector for pods. Existing ReplicaSets whose pods are selected by this will be the ones affected by this deployment.
+	Selector *metav1.LabelSelector `json:"selector"`
+
+	// Template describes the pods that will be created.
+	Template v1.PodTemplateSpec `json:"template"`
+
+	// The deployment strategy to use to replace existing pods with new ones.
+	Strategy DeploymentStrategy `json:"strategy,omitempty"`
+
+	// The number of old ReplicaSets to retain to allow rollback.
+	RevisionHistoryLimit *int32 `json:"revisionHistoryLimit,omitempty" protobuf:"varint,6,opt,name=revisionHistoryLimit"`
+
+	// Indicates that the deployment is paused.
+	Paused bool `json:"paused,omitempty" protobuf:"varint,7,opt,name=paused"`
+}
+{{</highlight>}}
+
+Getting the example:
+
+{{<highlight yaml>}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+        ports:
+        - containerPort: 80
+{{</highlight>}}
+
+*** Replicas, selectors and templates.
+
+ The same applies as the Rs sections applies here, in fact a new replicaset object is created for a deployment.
+
+Full capabilities of the deployment can be find [[https://kubernetes.io/docs/concepts/workloads/controllers/deployment/][here]].
+
+*** Strategy
+ 
+The deployment strategy can be used between two types actually:
+
+{{<highlight golang>}}
+type DeploymentStrategyType string
+
+const (
+	// Kill all existing pods before creating new ones.
+	RecreateDeploymentStrategyType DeploymentStrategyType = "Recreate"
+
+	// Replace the old ReplicaSets by new one using rolling update i.e gradually scale down the old ReplicaSets and scale up the new one.
+	RollingUpdateDeploymentStrategyType DeploymentStrategyType = "RollingUpdate"
+)
+{{</highlight>}}
+
+The Recreate one can have some downtime.
+
+*** Rolling updates, rollbacks
+
+When using the rollingupdate capabilities of a daemon the operator can see the status of a rollout, the history of events happened and undo a revision:
+
+{{<highlight shell>}}
+$ kubectl rollout status deployment nginx-deployment
+
+$ kubectl rollout history deployment nginx-deployment
+
+$ kubectl rollout undo deployment nginx-deployment
+
+$ kubectl rollout [pause|resume] deployment nginx-deployment
+{{</highlight>}}
+
+** Tasks
+
+https://kubernetes.io/docs/tasks/administer-cluster/dns-horizontal-autoscaling/
+https://kubernetes.io/docs/tasks/run-application/run-stateless-application-deployment/
+https://kubernetes.io/docs/tasks/run-application/update-api-object-kubectl-patch/
+https://kubernetes.io/docs/tasks/run-application/run-single-instance-stateful-application/
+https://kubernetes.io/docs/tasks/run-application/rolling-update-replication-controller/
+https://kubernetes.io/docs/tasks/debug-application-cluster/debug-pod-replication-controller/
+https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set/

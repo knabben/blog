@@ -1,0 +1,143 @@
+#+TITLE: Consul - Service Discovery
+#+DATE: 2015-09-03T18:00:00Z
+
+** Introduction
+
+Consul is a Service Discovery system, on a microservice architecture for example, we have some external and internal services laying around. There is a complexity in the setup and orchestration of these services which are being setup and destroyed all the time.
+
+A long term solution to the problem is to use DNS, an address name resolver. It is a mature and larger used protocol, but we can find some issues nowadays: How can it know if the service is down or up? How much your client can trust your DNS TTL on his cache?
+
+From the universe of Dynamic Service Registries, we are going to talk about Consul, the system offers a built in DNS, Service Discovery, Health checks, a Key/Value shared storage and multiple data centers.
+
+** Architecture
+
+Every node runs an agent write in Golang. It is capable to run as client or server, and can run the DNS||HTTP interface, besides that the agent is responsible for running checks and sync services.
+Lets start one server on a demo box, it comes with Consul source, the recommended number of boxes for fail-over is 3-5 boxes:
+
+{{<highlight shell>}}
+# git clone https://github.com/hashicorp/consul.git
+# cd consul/demo/vagrant-cluster
+# vagrant up
+
+# vagrant ssh n1
+
+vagrant@n1:/etc/consul.d$ consul agent -server -bootstrap-expect 1 -data-dir /etc/consul.d/ --bind=172.20.20.10
+==> WARNING: BootstrapExpect Mode is specified as 1; this is the same as Bootstrap mode.
+==> WARNING: Bootstrap mode enabled! Do not enable unless necessary
+==> WARNING: It is highly recommended to set GOMAXPROCS higher than 1
+==> Starting raft data migration...
+==> Starting Consul agent...
+==> Starting Consul agent RPC...
+==> Consul agent running!
+         Node name: 'n1'
+        Datacenter: 'dc1'
+            Server: true (bootstrap: true)
+       Client Addr: 127.0.0.1 (HTTP: 8500, HTTPS: -1, DNS: 8600, RPC: 8400)
+      Cluster Addr: 172.20.20.10 (LAN: 8301, WAN: 8302)
+    Gossip encrypt: false, RPC-TLS: false, TLS-Incoming: false
+             Atlas: <disabled>
+{{</highlight>}}
+
+On the remote agent
+
+{{<highlight shell>}}
+vagrant@n2:~$ consul agent -data-dir /tmp/consul -node=node2 --bind 172.20.20.11
+==> WARNING: It is highly recommended to set GOMAXPROCS higher than 1
+==> Starting Consul agent...
+==> Starting Consul agent RPC...
+==> Consul agent running!
+         Node name: 'node2'
+        Datacenter: 'dc1'
+            Server: false (bootstrap: false)
+       Client Addr: 127.0.0.1 (HTTP: 8500, HTTPS: -1, DNS: 8600, RPC: 8400)
+      Cluster Addr: 172.20.20.11 (LAN: 8301, WAN: 8302)
+    Gossip encrypt: false, RPC-TLS: false, TLS-Incoming: false
+             Atlas: <disabled>
+{{</highlight>}}
+
+On consul server add the remote agent on the cluster:
+
+{{<highlight shell>}}
+vagrant@n2:~$ consul members
+Node   Address            Status  Type    Build  Protocol  DC
+node2  172.20.20.11:8301  alive   client  0.5.2  2         dc1
+
+vagrant@n2:~$ consul join 172.20.20.10
+Successfully joined cluster by contacting 1 nodes.
+
+vagrant@n2:~$ consul members
+Node   Address            Status  Type    Build  Protocol  DC
+node2  172.20.20.11:8301  alive   client  0.5.2  2         dc1
+n1     172.20.20.10:8301  alive   server  0.5.2  2         dc1
+{{</highlight>}}
+
+** Services
+
+Lets create two services, one on agent box, the service is monitoring HTTP port and we must use the check with a interval.
+
+Create the file /etc/consul.d/web.json
+
+{{<highlight shell>}}
+{"service":
+  { "name": "web",
+    "id": "web",
+    "tags": ["web"],
+    "port": 80,
+    "check": {"http": "http://172.20.20.11/", "interval": "10s"}
+  }
+}
+{{</highlight>}}
+
+You can specify the path of consul cfg_dir with --config-dir /etc/consul.d, on both server/client.
+
+We have now the service synced:
+
+{{<highlight shell>}}
+2015/09/03 16:34:32 [INFO] agent: Synced service 'web'
+{{</highlight>}}
+
+The system provides an hierarchial REST API to access the state of the service and nodes:
+
+{{<highlight shell>}}
+curl http://localhost:8500/v1/catalog/service/web
+
+[
+    {
+        "Node": "node2",
+        "Address": "172.20.20.11",
+        "ServiceID": "web",
+        "ServiceName": "web",
+        "ServiceTags": [
+            "web"
+        ],
+        "ServiceAddress": "",
+        "ServicePort": 80
+    }
+]
+{{</highlight>}}
+
+As a last test lets share some data between the boxes using the K/V capability:
+
+On consul server n1, try:
+
+{{<highlight shell>}}
+vagrant@n1:~$ curl -X PUT -d 'myvalue' http://localhost:8500/v1/kv/web/k1
+{{</highlight>}}
+
+On the agent box get the value, passing the key:
+
+{{<highlight shell>}}
+vagrant@n2:~$ curl http://localhost:8500/v1/kv/web/k1/
+
+[{"CreateIndex":74,"ModifyIndex":74,"LockIndex":0,"Key":"web/k1/","Flags":0,"Value":"bXl2YWx1ZQ=="}]
+{{</highlight>}}
+
+The value is on base64.
+
+
+** Bibliography
+
+**** [1] - NEWMAN, Sam. Building Microservices. O'Reilly, 2005.
+**** [2] - TURNBULL, James. The Docker Book, 2014.
+
+

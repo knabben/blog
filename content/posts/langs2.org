@@ -1,0 +1,207 @@
+#+TITLE: Rust 101
+#+DATE: 2019-07-04T08:00:00-04:00
+
+
+** Introduction
+
+To keep the research in , I started some basic repository with
+the some official Rust book code compilation, I will try in this post comment
+some of the features and tricks I got while reading it:
+
+***** https://github.com/knabben/spec-lang/tree/master/go
+***** https://github.com/knabben/spec-lang/tree/master/rust
+
+
+** Guess 
+
+*** Tag 0.0.1
+
+println! is used to send the value to stdout.
+
+{{<highlight rust>}}
+let mut guess = String::new();
+{{</highlight>}}
+
+For rust you can create an immutable and a mutable variable, this is defined with the *mut* keyword
+in front.
+
+And the *::new* syntax indicates that new is an associated function of the String type.
+
+The & indicates this argument is a reference, which gives you a way to let multiple parts
+of your code access one piece of data without needing to copy that data into memory
+multiple times. For now you need to write &mut guess rather than &guess to make it mutable.
+
+read_line returns io::Result besides saving the value to the guess variable. The result types
+are enumrations, often referred to as enums. An enumeration is a type that can have a fixed
+set a values, and those values are called the enum's variants.
+
+For Result, the variants are Ok or Err. Ok variant indicates the operation was successful,
+and inside Ok is the successfully generated value. The Err variant means the operation failed
+ and Err contains information about how or why the operation failed.
+
+If the instance of io::Result is an Err value expect will crash and display the message
+on error.
+
+*** Tag 0.0.2
+
+Generating a random number, for rust is necessary a new crate or external dependency - rand, 
+extern crate rand is used to bring the dependency to the file and the import is made in use rand::Rng;
+
+We use match expression to decide what to do next based on which variant of Ordering, it has the 
+variants of Less, Greater and Equal. 
+
+To finish there's the conversion of the guess variable from string to u32, so the parse method parses a string
+into some number u32. Nothing so interesting here.
+
+** Ownership
+
+Unique feature on Rust, enables to make memory safety guarantees without needing a GC.
+
+***** Each value in Rust has a variable that's called its *owner*
+***** There can only be one owner at a time.
+***** When the owner goes out of scope, the value will be dropped.
+
+Ampersands are *references* they allow you to refer to some value without taking ownership of it. 
+Borrowing is having references as function parameters.
+
+At any given time you can have either one mutable referente or any number of immutable references.
+They must always be valid.
+
+{{<highlight rust>}}
+  fn another_function(y: i32, s: &mut String) -> &String{
+      println!("{} {} - another", y, s);
+      s.push_str(" - changed");
+      s
+  }
+
+  fn main() {
+      let x = 10;
+      let y = x;
+
+      let mut s = String::from("hello");
+      let s_cloned = s.clone();
+
+      another_function(y, &mut s);
+
+      let r1 = &s;
+      let r2 = &s;
+
+      println!("{} | {}", r1, r2);
+      println!("{} | {} | {}", s, s_cloned, y)
+  } // this scope is over and s/s_cloned is no longer valid
+{{</highlight>}}
+
+Slices references to part of a string, and they look like:
+
+{{<highlight rust>}}
+  let s = String::from("hello world");
+  let hello = &s[0..5];
+
+  fn slice_function(s: &str) -> &str {
+      &s[6..]
+  }
+
+  fn main() {
+      let s = String::from("hello, world");
+      let r = slice_function(&s[..]);
+      println!("{}", r)
+  }
+{{</highlight>}}
+
+** Struct
+
+A custom data type that lets you name and package together multiple related values that make up
+a meaninful group.
+
+Default format with #[derive(Debug)]
+
+impl used for bring methods to a struct and associated functions to bring 
+
+{{<highlight rust>}}
+#[derive(Debug)]
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+
+    // associate function
+    fn square(size: u32) -> Rectangle {
+        Rectangle { width: size, height: size }
+    }
+
+    fn can_hold(&self, other: &Rectangle) -> bool {
+        self.height > other.height && self.width > other.height
+    }
+}
+{{</highlight>}}
+
+** Generic types, traits and lifetimes
+
+For duplication of concepts we have generics. they are abstract stand-ins for concrete types or other properties.
+
+Functions can take paramters of some generic type instead of a concrete type like i32 or String.
+
+Traits are used to define behavior in a generic way. Lifetimes are a variety of generics that give the compiler
+information about how references relate to each other. Allowign to borrow values in many situations whiel enabling the 
+compiler to check that the reference are valid.
+
+In struct definitions generics can be used
+
+{{<highlight rust>}}
+struct Point<T, U> {
+    x: T,
+    y: U,
+}
+
+let integer = Point {x: 5, y: 6};
+let float = Point {x: 1.0, y: 4.0};
+
+enum Result<T, E> {
+    Ok(T),
+    Err(E),
+}
+{{</highlight>}}
+
+Traits are similar to a feature often called interfaces in other languages.
+
+** Grep 
+
+*** Tag 0.0.3
+
+Building a grep expect treats the error exception for a file not found only.
+
+read_to_string dumps the file read to a contents mutable variable
+
+**** https://github.com/knabben/spec-lang/blob/0.0.3/rust/minigrep/src/main.rs#L18 
+
+Not much to see here.
+
+*** Tag 0.0.4
+
+Refactoring for modularity and error handling, the basics will be splitting the function in two
+the run/main functions and implemented a new struct to hold the args.
+
+The run functions returns a trait object Box<Error>, means the functions will
+return a type that implements the Error trait, but we don't have to specify
+what particular type the return value will be.
+
+Removed the expect in favor of the ? operator, it will return the error value
+from the current function for the caller to handle.
+
+** Conclusion
+
+The memory management of rust is an incredible feature that can provide
+the developer more trust on the final code. 
+
+If you are interested in the tutorial:
+
+https://doc.rust-lang.org/book/ch12-00-an-io-project.html
+
+The book is free and a good read:
+
+https://doc.rust-lang.org/book/

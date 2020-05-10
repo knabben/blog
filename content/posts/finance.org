@@ -1,0 +1,174 @@
+#+TITLE: General finance formulas
+#+DATE: 2015-08-09T00:00:00Z
+
+** Future value
+
+{{<highlight python>}}
+import numpy as np
+import warnings
+warnings.filterwarnings("ignore")
+{{</highlight>}}
+
+Fv represents the future value of an operation in a particular time. 
+
+$$Fv = Pv * (1 + i)^n$$
+
+{{<highlight python>}}
+def fv(pv, n, i):
+    print('{0:.2f}'.format(np.fv(i/100, n, 0, -pv)))
+
+fv(5000, 9, 4.5)
+7430.48
+
+fv(5000, 12, 1.5)
+5978.09
+
+fv(1000, 18, 1.25)
+1250.58
+fv(2800, 3, 3.5)
+3104.41
+fv(2000, 3, 3.5)
+2217.44
+fv(1000, 3, 3.5)
+1108.72
+fv(340, 2, 5)
+374.85
+
+fv(1000, 48, 2.2)
+2842.12
+fv(3000, 3*12, 0.84)
+4054.18
+{{</highlight>}}
+
+** Present value
+
+$$P = \frac{Fv}{(1 + i) ^ n}$$
+
+{{<highlight python>}}
+def pv(fv, n, i):
+    print('{0:.2f}'.format(np.pv(i/100, n, 0, -fv)))
+
+pv(1587, 5, 8)
+pv(28224.08, 4 * 3, 7.5)
+pv(9000, 2 * 12, 1.55)
+
+1080.09
+11850.00
+6221.92
+{{</highlight>}}
+
+**  Period
+
+$$n = \frac{ln(\frac{Fv}{P})}{ln(1+i)}$$ 
+
+{{<highlight python>}}
+def nper(fv, pv, rate):
+    print(round(np.nper(rate/100, 0, -pv, fv)))
+
+nper(1610.51, 1000, 10)
+nper(4236, 3450, 2.3067)
+nper(600, 449.80, 5)
+nper(1425.76, 1000, 3)
+
+5.0
+9.0
+6.0
+12.0
+{{</highlight>}}
+
+** Interest rates
+
+$$i = (\frac{Fv}{P}) ^ \frac{1}{n}$$
+
+{{<highlight python>}}
+def rate(fv, pv, n):
+    print('{0:.2f}'.format(np.rate(n, 0, -pv, fv) * 100))
+
+rate(1610.51, 1000, 5)
+rate(700+2150, 2150, 7)
+rate(2540.35, 1500, 18)
+rate(4796.06, 540, 18)
+
+10.00
+4.11
+2.97
+12.90
+{{</highlight>}}
+
+** Payment function
+
+$$V = R.\left[\frac{(1+i)^n-1}{(1+1)^n.i}\right]$$
+
+{{<highlight python>}}
+def pmt(rate, n, pv): # pv = valor a vista
+    print('{0:.2f}'.format(np.pmt(rate/100, n, -pv)))
+
+pmt(10, 5, -1000)
+pmt(5, 10, -1500)
+pv = 16000-3500
+
+pmt(2.7214, 36, -pv)
+pmt(3.0, 7, -1900)
+pmt(1.0, 120, -110000)
+
+-263.80
+-194.26
+-549.00
+-304.96
+-1578.18
+{{</highlight>}}
+
+{{<highlight python>}}
+print(np.pv(0.10, 5, -263.79,0))
+print(np.pv(0.01, 10, -199.99 ,0))
+print(np.pv(0.03, 5, -100 ,0))
+
+999.971641902
+1894.1661931
+457.970718719
+{{</highlight>}}
+
+** PMT 
+
+{{<highlight python>}}
+print(np.pmt(0.10, 5, 1000, 0, 1))
+print(np.pmt(0.03, 12, 900, 0, 1))
+
+-239.815891632
+-87.7824047822
+{{</highlight>}}
+
+** PPMT
+
+{{<highlight python>}}
+# Um amigo lhe empresta $ 1000,00 que devem ser pagos em 5 parcelas,
+# utilizando o Price, monte o esquema de amortização com taxa de 10% ao mês.
+
+principal = 1000
+nper = 5
+per = np.arange(5) + 1
+
+# Calculo dos juros
+ipmt = np.ipmt(0.1, per, 5, principal)
+print(ipmt)
+
+# Calculo do valor amortizado
+ppmt = np.ppmt(0.1, per, 5, principal)
+print(ppmt)
+print(1000 - ppmt)
+
+# Calulo da parcela
+pmt = np.pmt(0.1, 5, principal)
+print(pmt)
+
+# Juros
+[-100., -83.62, -65.60, -45.78, -23.98]
+# Amortização
+[-163.80, -180.18, -198.20, -218.01, -239.81]
+# Parcela
+-263.797480795
+{{</highlight>}}
+
+** Listening 
+
+<iframe width="420" height="315" src="https://www.youtube.com/embed/jhicDUgXyNg" frameborder="0" allowfullscreen></iframe>

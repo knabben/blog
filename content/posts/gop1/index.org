@@ -1,0 +1,303 @@
+#+TITLE: Golang essays (part I)
+#+DATE: 2019-08-07T00:00:00Z
+
+** Introduction
+
+Starting with the printed Hello World, create a main.go file with the following content:
+
+{{<highlight golang>}}
+package main
+import (
+    "fmt"
+    "math/rand"
+)
+func main() {
+    fmt.Println("Hello, world\n", rand.Intn(10))
+}
+{{</highlight>}}
+
+On line 1 we have the package our programming is running.
+We import built-in packages on line 2, 3, 4. By convention, the package name is the same as the last element of the imported path, i.e. math/rand, use rand.*
+
+Open a terminal on VSCode and run your program:
+
+{{<highlight shell>}}
+$ go run main.go
+Hello, world:  1
+
+Build your program:
+$ go build main.go 
+./main
+$ file main
+main: Mach-O 64-bit executable x86_64
+
+Build for other OS/Arch with cross-compilation:
+$ GOOS=linux GOARCH=arm go build main.go 
+$ file main
+main: ELF 32-bit LSB executable, ARM, EABI5 version 1 (SYSV), statically linked, not stripped
+{{</highlight>}}
+
+**** Ex. 1 - How to install the binary in the default path?
+
+
+*** Packages and import 
+
+Go comes with a very handful default library: https://golang.org/pkg/
+
+Treats JSON (encoding/json), Sockets (net/http), file management (os), testing, datetime (time), archiving (archive). But how to install external libraries, where they come from?
+
+Your Workspace is defined with GOPATH (https://github.com/golang/go/wiki/SettingGOPATH), all external libraries by default are being installed at ~/go/src/*. Lets test with an external dependency in our project:
+
+
+{{<highlight golang>}}
+ $ go get github.com/bndr/gotabulate
+
+ main.go ---
+ package main
+
+ import (
+   "fmt"
+   "github.com/bndr/gotabulate"
+ )
+
+ func main() {
+   t := gotabulate.Create([][]interface{}{
+     []interface{}{"john", 20, "ready"},
+     []interface{}{"bndr", 23, "ready"},
+   })
+   t.SetHeaders([]string{"age", "status"})
+   fmt.Println(t.Render("grid"))
+ }
+
+ // Dependency installed in our workspace (equivalents are JS node_modules, Python site-packages).
+
+ $ ls /Users/<youruser>/go/src/github.com/bndr/gotabulate  
+ AUTHOR           CONTRIBUTORS     README.md        tabulate.go      utils.go
+ CHANGELOG        LICENSE          _tests           tabulate_test.go
+
+// NOTE: It's a good practice to import all packages in one import line.
+
+ BAD:
+ import "fmt"
+ import "io/utils"
+{{</highlight>}}
+
+ Rules about packages: The source code for a package resides in one or more .go files, usually in a directory whose name ends with the import path, Exported identifiers starts with an upper-case letter.
+
+ One way to initialize default things in our package is to create a init function like:
+
+ func init() { /* … */ } 
+
+**** Ex 2. - Can we create a table package and use it in our main function?
+
+*** Functions
+
+A function lets up wrap up a sequence of statements as a unit that can be called from elsewhere in a program, perhaps multiple times. Functions make it possible to break a big job into smaller pieces that might well be written by different people separated by both time and space.
+
+
+{{<highlight golang>}}
+  func name(parameter-list) (result-list) {
+     // body
+  }
+{{</highlight>}}
+
+  The parameter list specifies the names and types of the function's parameters, which are the local variables whose values or arguments are supplied by the caller. The result list specifies the types of the values that the function returns.
+
+
+{{<highlight golang>}}
+  func hypot(c1, c2 float64) float64 {
+     return math.Sqrt(c1 * c1 + c2 * c2)
+  }
+{{</highlight>}}
+
+  A function can return multiple results, just use the type on return list: for two floats return (float64, float64).
+
+  A return without argument returns the named return value, this is known as "naked" return:
+
+
+{{<highlight golang>}}
+  func split(sum int) (x, y int) {
+	  x = sum * 4 / 9
+	  y = sum - x
+	  return
+  }
+  fmt.Println(split(17)) // 7 10
+{{</highlight>}}
+
+  Some different ways to define a function signature:
+ 
+{{<highlight golang>}}
+  func add(x int, y int) int		{ return x + y }
+  func sub(x, y int) (z int)		{ z = x - y; return }
+  func first(x int, _ int) int 		{ return x }
+  func zero(int, int) int 		{ return 0 }
+{{</highlight>}}
+
+*** Variables and Constants
+
+  The var statement declares a list of variables the type if last. A var statement can be at package or function level:
+
+  var name type = expression
+
+  Initializers may be literal values or arbitraries expressions, package-level variables are initialized before main begin, and local variable are initialized as their declarations are encountered during function execution.
+
+  Variables with initializers:
+
+  var i, j, k int
+  var b, f, s = true, 2.3, "four"
+
+  Short variable declarations, 
+
+  I, j := 0, 1
+
+  NOTE: but don't confuse multi-variable declaration with tuple assignment
+
+  i, j = j, i // don't use := for variables already declared.
+
+{{<highlight golang>}}
+  package main
+
+  import (
+    "fmt"
+
+    "github.com/bndr/gotabulate"
+  )
+
+  const grid = "grid"
+  var headers []string = []string{"age", "status"}
+
+  // PrintTable defined in the struct passed on args
+  func PrintTable(t *gotabulate.Tabulate) {
+     fmt.Println(t.Render(grid))
+  }
+
+  func main() {
+      var row1 = []interface{}{"john", 20, "ready"}
+      row2 := []interface{}{"john", 20, "ready"}
+
+      t := gotabulate.Create([][]interface{}{row1, row2})
+      t.SetHeaders(headers)
+
+      PrintTable(t)
+  }
+{{</highlight>}}
+
+*** Basic Types
+
+  Golang has some basics types:
+
+{{<highlight golang>}}
+  bool string
+  int  int8  int16  int32  int64
+  uint uint8 uint16 uint32 uint64 uintptr
+  byte rune float32 float64 complex64 complex128
+
+  // Zero values or variables declared without an explicit initial value: 
+
+  0 for numeric types
+  False for bool
+  "" for strings
+
+  // For type conversions we can use the expression T(v) and convert the value v to type T.
+
+  var i int = 42
+  var f float64 = float64(i)
+  var u uint = uint(f)
+
+  OR 
+
+  i := 42
+  f := float64(i)
+  u := uint(f)
+{{</highlight>}}
+
+
+** Flow control statements
+
+https://tour.golang.org/flowcontrol/1
+
+*** For
+
+The for loop is the only loop statement in Go. It has a number of forms, one of which is illustrated here:
+
+
+{{<highlight golang>}}
+for initialization; condition; post {
+	// zero or more statements
+}
+{{</highlight>}}
+
+Parentheses are never used around the three components. If there's not initialization and no post, the semicolons may also be omitted:
+
+{{<highlight golang>}}
+// a traditional "while" loop
+for condition {
+   // …
+}
+
+// forever loop 
+for { 
+}
+{{</highlight>}}
+
+*** If and else
+
+
+{{<highlight golang>}}
+if condition {
+   // something
+} else {
+// other
+}
+
+// You can start with a short statement
+if v := math.Sqrt(n); v < n {
+	return v
+}
+{{</highlight>}}
+
+*** Switch as if else replacement
+
+{{<highlight golang>}}
+switch os := runtime.GOOS; os {
+case "darwin":
+	fmt.Println("OS X.")
+case "linux":
+	fmt.Println("Linux")
+default:
+	fmt.Println("%s \n", os)
+}
+{{</highlight>}}
+
+*** Defer
+
+A defer statement defers the execution of a function until the surrounding function returns.
+defer statement
+
+
+{{<highlight golang>}}
+package main
+import (
+"fmt"
+)
+
+var (
+z      = float64(1)
+firstZ = z
+)
+
+func Sqrt(x float64) float64 {
+for i := 1; i <= 10; i++ {
+		z -= (z*z - x) / (2 * z)
+		if firstZ == z {
+			return z
+		}
+		firstZ = z
+	}
+	return z
+}
+
+func main() {
+	fmt.Println(Sqrt(100))
+}
+{{</highlight>}}

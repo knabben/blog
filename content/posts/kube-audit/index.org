@@ -1,0 +1,125 @@
+#+TITLE: Kubernetes Audit Sink
+#+DATE: 2019-11-27T10:00:00
+
+*** Introduction
+
+The idea of this post is to test the Audit dynamic backend with a KIND cluster.
+
+Kubernetes has 4 stages:
+
+***** RequestReceived - The stage for events generated as soon as the audit handler receives the request, and before it is delegated down the handler chain.
+***** ResponseStarted - Once the response headers are sent, but before the response body is sent. This stage is only generated for long-running requests (e.g. watch).
+***** ResponseComplete - The response body has been completed and no more bytes will be sent.
+***** Panic - Events generated when a panic occurred.
+
+And 4 levels:
+
+***** None - don’t log events that match this rule.
+***** Metadata - log request metadata (requesting user, timestamp, resource, verb, etc.) but not request or response body.
+***** Request - log event metadata and request body but not response body. This does not apply for non-resource requests.
+***** RequestResponse - log event metadata, request and response bodies. This does not apply for non-resource requests.
+
+*** Configuring Kind
+
+It is possible to overwrite the kubeadm configuration passing multiple extra args for the REST API server,
+to enable this it is necessary to create the following flags:
+
+{{<highlight yaml>}}
+# config.yaml
+
+kind: Cluster
+apiVersion: kind.sigs.k8s.io/v1alpha3
+kubeadmConfigPatches:
+- |
+  apiVersion: kubeadm.k8s.io/v1beta2
+  kind: ClusterConfiguration
+  metadata:
+    name: config
+  apiServer:
+    extraArgs:
+      feature-gates: "DynamicAuditing=true"
+      audit-dynamic-configuration: "true"
+      runtime-config: "auditregistration.k8s.io/v1alpha1=true"
+{{</highlight>}}
+
+
+*** Configuring the Audit Sink
+
+It's possible to set the level and stage per URL configuration setting the host these filtered events go,
+for filtering rules the parameter --audit-policy-file must be set with Policy file.
+
+{{<highlight yaml>}}
+# audit.yaml
+
+apiVersion: auditregistration.k8s.io/v1alpha1
+kind: AuditSink
+metadata:
+  name: mysink
+spec:
+  policy:
+    level: Metadata
+    stages:
+    - ResponseComplete
+  webhook:
+    throttle:
+      qps: 10
+      burst: 15
+    clientConfig:
+      url: "https://generic-web-site/hook"
+{{</highlight>}}
+
+*** Starting kind
+
+To start the KIND with the configuration file and setup the Audit Sink:
+
+{{<highlight shell>}}
+$ kind create cluster --config config.yaml
+$ kubectl create -f audit.yaml
+{{</highlight>}}
+
+This is an example from the KIND cluster:
+
+{{<highlight yaml>}}
+{
+  "kind": "EventList",
+  "apiVersion": "audit.k8s.io/v1",
+  "metadata": {},
+  "items": [
+    {
+      "level": "Metadata",
+      "auditID": "73e1e2e3-5a68-460e-8aa8-aece72ffacb3",
+      "stage": "ResponseComplete",
+      "requestURI": "/api/v1/namespaces/kube-system/endpoints/kube-scheduler?timeout=10s",
+      "verb": "update",
+      "user": {
+        "username": "system:kube-scheduler",
+        "groups": [
+          "system:authenticated"
+        ]
+      },
+      "sourceIPs": [
+        "172.17.0.3"
+      ],
+      "userAgent": "kube-scheduler/v1.16.3 (linux/amd64) kubernetes/b3cbbae/leader-election",
+      "objectRef": {
+        "resource": "endpoints",
+        "namespace": "kube-system",
+        "name": "kube-scheduler",
+        "uid": "5bfc44f4-b62f-4395-99d0-9c24e1ee1b83",
+        "apiVersion": "v1",
+        "resourceVersion": "460"
+      },
+      "responseStatus": {
+        "metadata": {},
+        "code": 200
+      },
+      "requestReceivedTimestamp": "2019-11-28T02:32:01.690713Z",
+      "stageTimestamp": "2019-11-28T02:32:01.693278Z",
+      "annotations": {
+        "authorization.k8s.io/decision": "allow",
+        "authorization.k8s.io/reason": "RBAC: allowed by ClusterRoleBinding \"system:kube-scheduler\" of ClusterRole \"system:kube-scheduler\" to User \"system:kube-scheduler\""
+      }
+    }
+  ]
+}
+{{</highlight>}}

@@ -1,0 +1,8 @@
+languageCode = "en-us"
+title = "AK"
+theme = "ananke"
+baseURL = "http://knabben.github.io/"
+googleAnalytics = "UA-46699622-2"
+
+[params]
+  custom_css = ["css/custom.css"]

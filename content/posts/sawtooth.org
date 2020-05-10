@@ -1,0 +1,143 @@
+#+TITLE: Hyperledger Sawtooth
+#+DATE: 2019-06-02T16:50:00-04:00
+
+** Sawtooth 
+
+A RUST permissioned/permissionless [[https://sawtooth.hyperledger.org/docs/core/releases/latest/introduction.html][distribuded ledger]] created by Intel, an official project under the Hyperledger umbrella. 
+
+From the characteristics of the sawtooth we can have: distributed, immutable, secure.
+
+There's a separation between the application level and the core system. It provides smartcontract 
+abstraction that allows application developers to write contract logic in a language of their choice.
+
+An application can be a native business logic or a smart contract virtual machine. 
+In fact, both types of applications can co-exist on the same blockchain.
+
+Each application defines the custom transaction processors for its unique requirements.
+
+There're some distinticitve features of sawtooth: A REST API simplifies the client development by adapting validator
+communication to standard HTTP/JSON. Parallel transaction execution. Event system. Ethereum contract
+compatibility with Seth and Dynamic Consensus Algorithms given attention to the 
+Proof of Elapsed Time, sesigned to be a production-grade protocol capable of supporting
+large network populations.
+
+** Basic setup and Transaction Families
+
+Transactions are the basis of the blockchain, this is the method information flows between 
+nodes.
+
+Sawtooth provides several examples transaction families to serve as model for
+low-level functions (such as mantaining chain-wide settings and storing on-chain
+oermissions). These specifications together with transaction processors give us an out-process
+smart contract execution and global state storage.
+
+Each application defines a custom Transaction processors for it's unique requirements, 
+transaction processors SDKs are available in multiple languages to streamline creation of a 
+new contrat languages.
+
+** Goals for this post
+
+Since we are using as example the XO transaction family, here are the goals, the repository is [[https://github.com/knabben/xo-sawtooth][here]]:
+
+{{<highlight shell>}}
+1) Use Tilt to improve the Kubernetes development experience
+2) Replace the actual TP to the Golang one
+3) Describe the transaction flow from 
+{{</highlight>}}
+
+** Starting the example
+
+You can use [[https://github.com/kubernetes-sigs/kind][kind]] to create our test cluster, verify if it's working with:
+
+{{<highlight shell>}}
+$ git clone https://github.com/knabben/xo-sawtooth.git
+xo-sawtooth$ kind create cluster
+xo-sawtooth$ tilt up
+{{</highlight >}}
+
+A quick explanation of the PODs:
+
+{{<highlight shell>}}
+sawtooth-shell - Utils for interacting with the Sawtooth Blockchain
+sawtooth-validator - Sawtooth core blockchain validator
+sawtooth-devmode-engine - Random-leader consensus for development mode
+sawtooth-settings-tp - Transaction processor for settings (required)
+sawtooth-xo-tp-go - Transaction processor for XO family
+sawtooth-rest-api - Validator REST API
+
+# You can look the deployments
+
+$ kubectl get pods
+NAME                                  READY   STATUS    RESTARTS   AGE
+sawtooth-684dcfdc6-6m4kx              2/2     Running   0          16m
+sawtooth-rest-api-8968fcf8d-6gv2h     1/1     Running   0          16m
+sawtooth-shell                        1/1     Running   0          15m
+sawtooth-validator-5b465ddc69-ltclg   2/2     Running   0          16m
+{{</highlight>}}
+
+** XO Create game
+
+The shell box (make shell) contains the Python [[https://github.com/hyperledger/sawtooth-sdk-python/blob/master/examples/xo_python/sawtooth_xo/xo_cli.py#L497][entrypoint]] for sawtooth-xo client
+
+{{<highlight python>}}
+def do_create(args):
+    name = args.name
+
+    url = _get_url(args)
+    keyfile = _get_keyfile(args)
+    auth_user, auth_password = _get_auth_info(args)
+
+    client = XoClient(base_url=url, keyfile=keyfile)
+
+    if args.wait and args.wait > 0:
+        response = client.create(
+            name, wait=args.wait,
+            auth_user=auth_user,
+            auth_password=auth_password)
+    else:
+        response = client.create(
+            name, auth_user=auth_user,
+            auth_password=auth_password)
+
+    print("Response: {}".format(response))
+{{</highlight>}}
+
+As you can see the XoClient is initiated with the client private key to sign up the transaction payload.
+
+The [[https://github.com/hyperledger/sawtooth-sdk-python/blob/master/examples/xo_python/sawtooth_xo/xo_client.py#L187][_send_xo_txn]] function is responsible to create a TransactionHeader and a Transaction signed by the username.
+
+[[https://github.com/hyperledger/sawtooth-sdk-python/blob/master/examples/xo_python/sawtooth_xo/xo_client.py#L143][_send_request]] send the encoded Protobuf on base64 to the REST API - POST /batches.
+
+** Validation and REST API
+
+Even if the transaction in only one it must send a batches, analyzing the [[https://github.com/hyperledger/sawtooth-core/blob/8085604594105ccc478072cafbd1bafe1f4948d6/rest_api/sawtooth_rest_api/route_handlers.py#L124][handler.submit_batches]] you have the
+_query_validator sending the request to the validator - Uses an executor to send an asynchronous ZMQ request to the 
+validator with the handler's Connection.
+
+TL;DR - When the validator receives a transaction from a client, the validator confirms that the signature is valid, 
+then send the transaction to the transaction processor to be executed.
+
+** XO Transaction Processor
+
+The TP-XO listen for requests sent by the transaction processor and run in the handler:
+
+{{<highlight golang>}}
+handler := &xo.XoHandler{}
+processor := processor.NewTransactionProcessor(endpoint)
+processor.AddHandler(handler)
+processor.ShutdownOnSignal(syscall.SIGINT, syscall.SIGTERM)
+err = processor.Start()
+{{</highlight>}}
+
+The Apply from XoHandler is used by the processor to check the keys, is the case of create it validateCreate,
+prints it and set the global state on [[https://github.com/hyperledger/sawtooth-core/blob/2f559397a71e69a79f713e11fb4731da9c6ce631/protos/validator.proto#L54][sawtooth validator]] with xoState.SetGame(payload.Name, game) via the processor context.
+
+** Conclusion
+
+We had a very high level overview of the XO family transactions.
+
+The capability of having a dynamic consensus and mainly this level of smartcontract decoupling, together
+with the permissioned capability makes Sawtooth a very fast, reliable and secure solution for private 
+blockchains.
+
+If you want to learn more [[https://github.com/hyperledger/education-sawtooth-simple-supply][Sawtooth Simple Supply]] is a good source of documentation and examples.

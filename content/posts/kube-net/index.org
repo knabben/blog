@@ -1,0 +1,203 @@
+#+TITLE: Networking
+#+DATE: 2019-12-28T23:00:00Z
+
+** Networking
+
+The first and easiest way to access the Pod container port is via port-forward command:
+
+{{<highlight shell>}}
+$ kubectl port-forward <pod_name> <local_port>:<remote_port>
+{{</highlight>}}
+
+Take a look on the dynamic [[https://github.com/knabben/forwarder][port-forwarder.]]
+
+** Service
+
+An abstract way to expose an application running on a set of Pods as a network service.
+
+a Service is an abstraction which defines a logical set of Pods and a policy by which to access them .
+The set of Pods targeted by a Service is usually determined by a selector.
+
+{{<highlight yaml>}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-svc
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+{{</highlight>}}
+
+The service spec again, use the selector and when a Pod with this label matches the service will be used for that particular pod.
+
+A new Service called nginx-deployment (which a DNS register is created - nginx-deployment.default.svc)
+
+{{<highlight shell>}}
+$ kubectl expose deployment nginx--port 80 --target-port 80
+Name:              nginx
+Namespace:         default
+Labels:            app=nginx
+Annotations:       <none>
+Selector:          app=nginx
+Type:              ClusterIP
+IP:                10.99.142.233
+Port:              <unset>  80/TCP
+TargetPort:        80/TCP
+Endpoints:         10.244.0.18:80,10.244.0.19:80,10.244.0.20:80
+Session Affinity:  None
+Events:            <none>
+
+$ curl http://nginx
+200
+{{</highlight>}}
+
+We have some types of services:
+
++ "ExternalName" maps to the specified externalName
++ "ClusterIP" allocates a cluster-internal IP address for load-balancing to endpoints
++ "None", no virtual IP is allocated and the endpoints are published as a set of endpoints rather than a stable IP
++ "NodePort" builds on ClusterIP and allocates a port on every node which routes to the clusterIP
++ "LoadBalancer" builds on NodePort and creates an external load-balancer (if supported in the current cloud)
+ 
+{{<highlight golang>}}
+// ServiceSpec describes the attributes that a user creates on a service.
+type ServiceSpec struct {
+	// The list of ports that are exposed by this service.
+	// More info: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
+	Ports []ServicePort `json:"ports,omitempty"`
+
+	// Route service traffic to pods with label keys and values matching this
+	// selector.
+	// More info: https://kubernetes.io/docs/concepts/services-networking/service/
+	Selector map[string]string `json:"selector,omitempty"`
+
+	// clusterIP is the IP address of the service and is usually assigned
+	// randomly by the master.
+	// More info: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
+	ClusterIP string `json:"clusterIP,omitempty"`
+
+	// type determines how the Service is exposed.
+	// More info: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+	Type ServiceType `json:"type,omitempty"`
+
+	// Only applies to Service Type: LoadBalancer
+	// +optional
+	LoadBalancerIP string `json:"loadBalancerIP,omitempty"`
+
+	// externalName is the external reference that kubedns or equivalent will
+	// return as a CNAME record for this service. No proxying will be involved.
+	ExternalName string `json:"externalName,omitempty"`
+}
+{{</highlight>}}
+
+kube-proxy is responsible for implementing a form of virtual IP for Services of type other than ExternalName.
+
+** Ingress
+
+An API object that manages external access to the services in a cluster, typically HTTP.
+Ingress exposes HTTP and HTTPS routes from outside the cluster to services within the cluster.
+
+{{<highlight yaml>}}
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: test-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: hello.info
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: nginx-svc
+          servicePort: 80
+{{</highlight>}}
+
+** Network policies
+
+A network policy is a specification of how groups of pods are allowed to communicate with each other and other network endpoints.
+NetworkPolicy resources use labels to select pods and define rules which specify what traffic is allowed to the selected pods.
+
+They can be Ingress or Egress in a Pod point of view.
+
+{{<highlight golang>}}
+// Policy Type string describes the NetworkPolicy type
+type PolicyType string
+
+const (
+	// PolicyTypeIngress is a NetworkPolicy that affects ingress traffic on selected pods
+	PolicyTypeIngress PolicyType = "Ingress"
+	// PolicyTypeEgress is a NetworkPolicy that affects egress traffic on selected pods
+	PolicyTypeEgress PolicyType = "Egress"
+)
+
+// NetworkPolicySpec provides the specification of a NetworkPolicy
+type NetworkPolicySpec struct {
+	// Selects the pods to which this NetworkPolicy object applies. 
+	PodSelector metav1.LabelSelector `json:"podSelector"`
+
+	// List of ingress rules to be applied to the selected pods.
+	Ingress []NetworkPolicyIngressRule `json:"ingress,omitempty"`
+
+	// List of egress rules to be applied to the selected pods.
+	Egress []NetworkPolicyEgressRule `json:"egress,omitempty"`
+
+	// List of rule types that the NetworkPolicy relates to.
+	// Valid options are "Ingress", "Egress", or "Ingress,Egress".
+	PolicyTypes []PolicyType `json:"policyTypes,omitempty"`
+}
+
+// NetworkPolicyIngressRule describes a particular set of traffic that is allowed to the pods
+// matched by a NetworkPolicySpec's podSelector. The traffic must match both ports and from.
+type NetworkPolicyIngressRule struct {
+	// List of ports which should be made accessible on the pods selected for this
+	// rule.
+  Ports []NetworkPolicyPort `json:"ports,omitempty"`
+
+	// List of sources which should be able to access the pods selected for this rule.
+	From []NetworkPolicyPeer `json:"from,omitempty"`
+}
+
+// NetworkPolicyEgressRule describes a particular set of traffic that is allowed out of pods
+// matched by a NetworkPolicySpec's podSelector. The traffic must match both ports and to.
+type NetworkPolicyEgressRule struct {
+	// List of destination ports for outgoing traffic.
+	Ports []NetworkPolicyPort `json:"ports,omitempty"`
+
+	// List of destinations for outgoing traffic of pods selected for this rule.
+	To []NetworkPolicyPeer `json:"to,omitempty"`
+}
+{{</highlight>}}
+
+An example of the usage of this NetworkPolicy capability, DENY all egress traffic from pod to source.
+
+
+{{<highlight yaml>}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+{{</highlight>}}
+
+PS: Not all CNIs have support for this feature.
+
+** Tasks
+
+https://kubernetes.io/docs/tasks/access-application-cluster/connecting-frontend-backend/
+https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/
+https://kubernetes.io/docs/tasks/access-application-cluster/service-access-application-cluster/
+https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/
+https://kubernetes.io/docs/tasks/run-application/run-single-instance-stateful-application/
+https://kubernetes.io/docs/tasks/run-application/run-replicated-stateful-application/
+
+https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/

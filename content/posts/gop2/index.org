@@ -1,0 +1,439 @@
+#+TITLE: Golang essays (part II)
+#+DATE: 2019-08-07T01:00:00Z
+
+** Pointers
+
+A variable is a piece of storage containing a value. A pointer value is the memory address of a variable.
+
+The type *T is a pointer to a T. The operator that generates the pointer is the &.
+
+{{<highlight golang>}}
+  x := 1
+  p := &x 		// p, of type *int, points to x
+
+  fmt.Println(*p) 	// "1"
+  *p = 2 			// dereferencing or indirecting
+  fmt.Println(x)
+{{</highlight>}}
+
+** Struct
+
+Is an aggregate data type that groups together zero or more named values of arbitrary types as a single entity:
+
+{{<highlight golang>}}
+ type Employee struct {
+   ID int
+   Name string
+   Address string
+   DoB time.Time
+   Position string
+   Salary int
+ }
+ var dilbert Employee
+
+  // Assign a value to the struct
+  dilbert.Salary += 5000
+
+  // Fetch values via dot operator
+  fmt.Println(dilbert.Salary)
+
+  // Accessing structs via pointers
+  v := &Employee{ID: 1}
+  (*v).Name = "Dilbert"
+  fmt.Println(v)
+{{</highlight>}}
+
+For efficiency, larger struct types are usually passed to or returned from functions indirectly using a pointer (this is required if the function must modify its argument):
+
+{{<highlight golang>}}
+ func Bonus(e *Employee, percent int) int {
+    e.Salary = e.Salary * percent / 100
+ }
+{{</highlight>}}
+
+For structs literal it is possible to instantiate the struct passing the arguments in order like:
+
+{{<highlight golang>}}
+  type Point struct { X, Y int}
+  P := Point{1, 2}
+  // OR you can list the fields
+  anim := gif.GIF{LoopCount: nframes}
+{{</highlight>}}
+
+** Array
+
+An array is a fixed-length sequence of zero or more elements of a particular type. The type [n]T is an array of n values of type T. 
+
+Individual array elements are accessed with the conventional subscript notation, where subscripts run from zero to one less than the array length.
+
+{{<highlight golang>}}
+  var a [3]int
+  fmt.Println(a[0]) // Print the first element
+  fmt.Println(a[len(a) - 1]) // Print the last element
+
+  // You can iterate in an array with indices and elements (keys, values)
+  for i, v := range a {
+	  fmt.Println("%d %d\n", i, v)
+  }
+{{</highlight>}}
+
+We can use an array literal to initialize the array with a list of values
+
+{{<highlight golang>}}
+  var q [3]int = [3]int{1, 2, 3}
+  var r [3]int = [3]int{1, 2}
+  fmt.Println(r[2]) // "0" - zero value
+{{</highlight>}}
+
+If … appears in the place of the length [...]int the array length is determined by the number of initializers. q := [...]int{1, 2, 3}.
+
+** Slices
+
+While the array has a fixed size, a slice is a dynamically-sized, flexible view into the elements of an array. Arrays and slices are intimately connected. The type []T is a slice with elements of type T.
+A slice is formed by specifying two indices, a low and high bound, separated by a colon:
+
+a[low : high]
+
+Slicing beyond cap(s) causes a panic, but slicing beyond len(s) extends the slice, o the result may be longer than the original
+
+{{<highlight golang>}}
+fmt.Println(summer[:20]) // panic: out of range
+
+a := []int{1,2,3,4,5,6,7,8,9,10}
+a[0:10]		// [1 2 3 4 5 6 7 8 9 10]
+a[:10]		// [1 2 3 4 5 6 7 8 9 10]
+a[0:]		// [1 2 3 4 5 6 7 8 9 10]
+a[:]		// [1 2 3 4 5 6 7 8 9 10]
+{{</highlight>}}
+
+The built-in append function appends items to slices:
+
+{{<highlight golang>}}
+  var runes []rune
+  for _, r := range "Hello, Florianópolis" {
+	  runes = append(runes, r)
+  }
+  fmt.Println("%q\n", runes)
+{{</highlight>}}
+
+** Maps
+
+A map maps keys to values, hash tables is one of the most ingenious and versatile of all data structures, It is an unordered collection of key/value pairs in which all the keys are distinct, and the value associated with a given key can be retrieved, updated, or removed using a constant number of key comparisons on the average, no matter how large the hash table.
+
+A map type is written map[K]V, where K and V are the types of its keys and values.
+
+{{<highlight golang>}}
+ages := make(map[string]int)]
+ages["alice"] = 31
+ages["charlie"] = 35
+// Deleting element
+delete(ages, "alice")
+{{</highlight>}}
+
+** Functions and methods
+
+Functions as first-class values: like other values, function values have types, and they may be assigned to variables or passed to or returned from functions. A function value may be called like any other function. For example:
+
+{{<highlight golang>}}
+  func square(n int) int { return n * n }
+
+  f := square
+  fmt.Println(f(3)) // "9"
+{{</highlight>}}
+
+The zero value of a function type is nil. Calling a nil function value causes a panic.
+
+Anonymous function are named functions can be declared only at the package level, but we can use a function literal to denote a function value within any expression.
+
+{{<highlight golang>}}
+func squares() func() int {
+	var x int
+	return func() int {
+		X++
+		Return x * x
+	}
+}
+f := squares()
+fmt.Println(f())
+{{</highlight>}}
+
+{{<highlight golang>}}
+// fibonacci is a function that returns
+// a function that returns an int.
+func fibonacci() func() int {
+	x, y := 0, 1
+	return func() int {
+		x, y = y, x+y
+		return y - x
+	}
+}
+{{</highlight>}}
+
+** Methods
+
+Since the 1990s, object-oriented programming (OOP) has been the dominant programming paradigm in industry and education, and nearly all widely used languages developed since then have included support for it.
+
+An object is simply a value or variable that has methods, and a method is a function associated with a particular type. An object-oriented program is one that uses methods to express the properties and operations of each data structure so that clients need not access the object's representation directly. You can declare methods to a non-struct types, too.
+
+The receiver appears in its own argument list between the func keyword and the method name:
+
+{{<highlight golang>}}
+  type Vertex struct {
+	  x, y float64
+  }
+
+  func (v Vertex) Abs() float64 {
+	  // return
+  }
+  v := Vertex{3, 4}
+  fmt.Println(v.Abs())
+{{</highlight>}}
+
+Declare methods with Pointer receivers, the receiver type has the literal syntax *T for some type T. Removing the * we are operating in a copy of the original value.
+
+{{<highlight golang>}}
+  func (v *Vertex) Scale(f float64) {
+	  v.X = v.X * f
+  	v.Y = v.Y * f
+  }
+{{</highlight>}}
+
+Reasons to use a pointer receiver:
+The first is so that the method can modify the value that its receiver points to.
+The second is to avoid copying the value on each method call. This can be more efficient if the receiver is a large struct, for example.
+
+** Interfaces
+
+Interface types express generalizations and abstractions about the behaviour of other types. By generalizing, interfaces let us write functions that are more flexible and adaptable because they are not tied to the details of one particular implementation.
+
+An interface type specifies a set of methods that a concrete type must possess to be considered an instance of that interface.
+
+{{<highlight golang>}}
+  type Abser interface {
+	  abs() float64
+  }
+  var a Abser = Vertex{3, 5}
+{{</highlight>}}
+
+An empty interface interface{} is used by code that handles values of unknown type. Type assertions provides access to an interface value's underlying concrete value. This statement asserts that the interface value i holds the concrete type T and assign the underlying T value to the variable t.
+
+{{<highlight golang>}}
+  var i interface{} = "hello"
+  T := i.(T)  // s, ok := i.(string)
+{{</highlight>}}
+
+You can have type switches like this:
+
+{{<highlight golang>}}
+  switch x.(type) {
+    case nil:
+    case int, uint:
+    case bool
+    case string: ….
+  }
+{{</highlight>}}
+
+Some of the most common implementations of Interfaces includes, Stringer, Error and io.Reader/io.Writer type is one if the most widely used interfaces because it provides an abstraction of all the types to which bytes can be read/written, which includes files, memory buffers, network connections, HTTP clients, archivers, and so on. 
+
+{{<highlight golang>}}
+// Stringer the equivalent of __str__ of a Python class
+func (p Person) String() string {
+	return fmt.Sprintf("%v (%v years)", p.Name, p.Age)
+}
+
+// Error interfaces allows implementation of custom errors
+type error interface {
+	Error() string
+}
+{{</highlight>}}
+
+**** Ex. 6 - Exercise: Errors
+
+ {{<highlight golang>}}
+   type ErrNegativeSqrt float64
+
+   func (e ErrNegativeSqrt) Error() string {
+  	 return fmt.Sprintf("cannot Sqrt negative number: %f", float64(e))
+   }
+
+   func Sqrt(x float64) (float64, error) {
+	   if x < 0 {
+		   return 0.0, ErrNegativeSqrt(x)
+  	 }
+	 }
+   ...
+ }
+ {{</highlight>}}
+
+**** Ex. 7 - Stringers
+
+{{<highlight golang>}}
+  func (ipAddr IPAddr) String() string {
+	  return fmt.Sprintf("%d.%d.%d.%d", ipAddr[0], ipAddr[1], ipAddr[2], ipAddr[3])
+  }
+{{</highlight>}}
+
+**** Ex. 8 - Readers
+
+{{<highlight golang>}}
+  type MyReader struct{}
+
+  func (r MyReader) Read(b []byte) (int, error) {
+    b[0] = 'A'
+    return 1, nil
+  }
+
+  func main() {
+	  reader.Validate(MyReader{})
+  }
+{{</highlight>}}
+
+**** Ex. 9 - rot13Reader
+
+{{<highlight golang>}}
+  func rot13(x byte) byte {
+    switch {
+    case x >= 65 && x <= 77:
+        fallthrough
+    case x >= 97 && x <= 109:
+        x = x + 13
+    case x >= 78 && x <= 90:
+        fallthrough
+  	case x >= 110 && x <= 122:
+        x = x - 13
+    }
+    return x
+  }
+
+  func (r rot13Reader) Read(b []byte) (int, error) {
+	  stream, _ := r.r.Read(b)
+   	for i := 0; i <= stream; i++ {
+		  b[i] = rot13(b[i])
+	  }
+  	return stream, nil
+  }
+{{</highlight>}}
+
+When designing a new package, novice Go programmers often start by creating a set of interfaces and only later define the concrete types that satisfy them. This approach results in many interfaces, each of which has only a single implementation. Don't do that.
+
+
+** Goroutines - https://tour.golang.org/concurrency/1
+
+Goroutine is a lightweight thread managed by the Go runtime. Go enables two styles of concurrent programming. Goroutines and Channels which support communication sequential process or CSP, a model of concurrency in which values are passed between independent activities (goroutines) but variables are for the most part confined to a single activity.
+
+Each concurrently executing activity is called a goroutine.
+
+{{<highlight golang>}}
+  f() // call f(); wait for it to return
+  Go f() // create a new goroutine that calls f(); don't wait.
+{{</highlight>}}
+
+On good example on how to use goroutine to execute a background job while waiting a final calculation:
+
+{{<highlight golang>}}
+  func main() {
+	  go spinner(100 * time.Milliseconds)
+  	const n = 45
+   	fibN := fib(n)
+	  fmt.Printf("\r Fibonnaci(%d) = %d\n", n, fibN)
+  }
+
+  func spinner(delay time.Duration) {
+	  for {
+		  for _, r := range `_\|/_` {
+			  fmt.Printf("\r%c", r)
+  			time.Sleep(delay)
+		  }
+	  }
+  }
+{{</highlight>}}
+
+If goroutines are the activities of a concurrent Go program, channels are the connections between them. A channel is a communication mechanism that lets one goroutine send values to another goroutine. Each channel is a conduit for values of a particular type, called the channel's element type. The type of a channel whose elements have type int is written chan int.
+
+{{<highlight golang>}}
+ch := make(chan int) // ch has type 'chan int'
+{{</highlight>}}
+
+A channel has two principal operations, send and receive, collectively known as communications:
+
+{{<highlight golang>}}
+  ch <- x // a send statement
+  x = <- ch // a receives expression in an assignment statement
+  <- ch // a receives statement; result is discarded
+{{</highlight>}}
+
+A channel created with a simple call to make is called an unbuffered channel, but make accepts an optional second argument, an integer called the channel's capacity, if the capacity is non-zero make crates a buffered channel:
+
+{{<highlight golang>}}
+  ch = make(chan int) // unbuffered channel
+  ch = make(chan int, 0) // unbuffered channel
+  ch = make(chan int, 3) // buffered channel with capacity 3
+{{</highlight>}}
+
+close(c) can be used to indicate a channel is being closed, and a second parameter to the received expression can indicate it: v, ok := <- ch, "ok" is false if there are no more values to receive.
+
+Select allows multiplexing these operations:
+
+{{<highlight golang>}}
+  select {
+    case <- ch1:
+    //...
+    case x := <- ch2:
+	  // …. Use x …
+    case ch3 <- y:
+	  // …
+    default :
+   	// …
+  }
+{{</highlight>}}
+
+**** Ex 10. Binary tree walk
+
+{{<highlight golang>}}
+  package main
+
+  import (
+    "fmt"
+    "golang.org/x/tour/tree"
+  )
+
+  func WalkTree(t *tree.Tree, ch chan int) {
+    Walk(t, ch)
+    close(ch)
+  }
+
+  // Walk walks the tree t sending all values
+  // from the tree to the channel ch.
+  func Walk(t *tree.Tree, ch chan int) {
+    if t.Left != nil {
+      Walk(t.Left, ch)
+    }
+    ch <- t.Value
+    if t.Right != nil {
+      Walk(t.Right, ch)
+    }
+  }
+
+  // Same determines whether the trees
+  // t1 and t2 contain the same values.
+  func Same(t1, t2 *tree.Tree) bool {
+    ch1, ch2 := make(chan int), make(chan int)
+    go WalkTree(t1, ch1)
+    go WalkTree(t2, ch2)
+    for i := range ch1 {
+      if i != <-ch2 {
+        return false
+      }
+    }
+    return true
+  }
+
+  func main() {
+    ch := make(chan int)
+    go WalkTree(tree.New(10), ch)
+    for i := range ch {
+      fmt.Println(i)
+    }
+    fmt.Println("Should return true:", Same(tree.New(1), tree.New(1)))
+  }
+{{</highlight>}}

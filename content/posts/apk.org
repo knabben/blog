@@ -1,0 +1,109 @@
+#+TITLE: Android APK hacking
+#+DATE: 2016-12-16T00:00:00Z
+
+** Introduction
+
+The post today is about fun, Kali Linux and Android apps hacking. Check it out!
+
+Why? Because people hide your access and don't provide you a plain, well structured and easy to use API, no SDK, nothing. You are probalby locked in those apps, that normally share less than what you want.
+
+** Host enumeration
+
+The good old nmap should do the trick, find your network subnet, scan your hosts and look for obvious MAC address like Samsung Eletronics, for this post propouse we do have access to the cellphone, so obviously this step is not necessary.
+
+** Sniffing the network
+
+The idea is to sniff the network with a man in the middle attack and try to find plain-text REST api access between your cellphone and the server it is trying to access, banks are going to use SSL and you will need to enable a fake certificate on the equipment before going on.
+
+The ARP (address resolution protocol) is a MAC Address -> IP translation protocol, lets say my IP machine is 192.168.0.6 and I want to hit 192.168.0.10, when I send a packet for this host and don't have my MAC table filled (arp -a), I start to ask everyone of the network Who-has this IP.
+
+{{<highlight shell>}}
+a4:02:b9:04:86:99 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Request who-has 192.168.0.10 tell 192.168.0.6, length 28
+cc:61:e5:70:b4:9e > a4:02:b9:04:86:99, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Reply 192.168.0.10 is-at cc:61:e5:70:b4:9e, length 28
+{{</highlight>}}
+
+The owner send me back his MAC address, so the OS can craft the full TCP/IP packet. What we are going to do is spoof this reply and overwrite the target arp table, without his request. I am going to use arpspoof -i wlan0 -t 192.168.0.10 192.168.0.1
+
+{{<highlight shell>}}
+07:30:45.655767 a4:02:b9:04:86:99 > 00:00:00:00:00:00, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Reply 192.168.0.1 is-at a4:02:b9:04:86:99, length 28
+07:30:47.655964 a4:02:b9:04:86:99 > 00:00:00:00:00:00, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Reply 192.168.0.1 is-at a4:02:b9:04:86:99, length 28
+07:30:49.656158 a4:02:b9:04:86:99 > 00:00:00:00:00:00, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Reply 192.168.0.1 is-at a4:02:b9:04:86:99, length 28
+07:30:51.656306 a4:02:b9:04:86:99 > 00:00:00:00:00:00, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Reply 192.168.0.1 is-at a4:02:b9:04:86:99, length 28
+{{</highlight>}}
+
+It keeps saying: Hey. target .10, your default gateway is on (a4:02...). The problem is, a4:02... is my own machine mac address, so the target starts to send his packets to my MAC (the network switch equipment will do it), and with a simple TCPdump command I can start to learn about the target.
+
+
+** SSL
+
+Oh the app uses SSL as it should be doing. So we need an after-step mitmproxy and a certificate installed on the client. On Security menu is possible to install the certificate pushed to your phone.
+
+{{<highlight shell>}}
+adb push ~/.mitmproxy/mitmproxy-ca-cert.cer /sdcard/
+{{</highlight>}}
+
+
+** Bank sniffing
+
+After you play around the app you see the requests on MITMProxy, for example the account balance data for a known bank:
+
+{{<highlight shell>}}
+>> POST https://m.santander.com.br/MbbNovoMobileServices/SetupEndpointService
+>> POST https://m.santander.com.br/MbbNovoMobileServices/SaldoContaEndpointService
+
+<?xml version='1.0' encoding='utf-8'?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+  <soapenv:Body>
+    <dlwmin:consultarExtratoPorPeriodoResponse xmlns:dlwmin="http://webservice.mbb.app.bsbr.altec.com/" xmlns:
+      <return>
+        <lancamentos>
+          <data>15/12/2016</data>
+          <docto/>
+          <historico>SALDO ANTERIOR</historico>
+          <valor>xxxx</valor>
+        </lancamentos>
+        <lancamentos>
+          <data>15/12/2016</data>
+          <docto>xxx</docto>
+          <historico>xxxx 15/12 yyy</historico>
+          <valor>-xx,00</valor>
+        </lancamentos>
+        <lancamentos>
+          <data>16/12/2016</data>
+          <docto>xxx</docto>
+          <historico>xxxx 16/12 yyy</historico>
+          <valor>-xx,00</valor>
+        </lancamentos>
+	...
+{{</highlight>}}
+
+You can parse data via a crawler (scrapy is a good tool for this) and provide an interface for it, or you can integrate with Prometheus for example and create alerts for certain thresholds for you correlated account balance.
+
+** Captchas (BONUS)
+
+One of the websites I had crawled a long time ago, had some captchas to move on, this is a method in python + Tesseract to clean up the captcha and read the content:
+
+{{<highlight python>}}
+	def captcha(self):
+   		im = array(Image.open('/tmp/what').convert('L'))
+		for idx_row, row in enumerate(im):
+			# On grayscale get Max value (bg) and Min value (fg)
+			max_v = row.max()
+			min_v = row.min()
+			if idx_row > 0: # Pass first one
+				for idx_col, col in enumerate(row): # Iterate through cols
+					try:
+						before = im[idx_row-1][idx_col]
+						after = im[idx_row+1][idx_col]
+						if col == max_v and before < max_v and after < max_v:
+							im[idx_row][idx_col] = before
+					except IndexError:
+						pass
+		imx = Image.fromarray(im, mode='L')
+		return image_to_string(imx).upper().strip(' ')
+{{</highlight>}}
+
+
+** Conclusion
+
+This was a quick post just to remember the power we have when ignoring the lame interfaces corps provides us to access the data, and use good methodologies and tools to grab it instead.
