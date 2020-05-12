@@ -12,7 +12,7 @@ probably the vm part is not necessary.
 *** VirtualBox
 
 Since we are on MacOSX, and Kubelet nodes works only on Linux and Windows the setup of a vm is necessary
-for this step a Debian Bustar image is going to be used, the Virtualbox is 6.1.6 with additions.
+for this step a Debian Buster image is going to be used, the Virtualbox is 6.1.6 with additions.
 
 *** Vagrantfile
 
@@ -105,11 +105,56 @@ No resources found in default namespace.
 
 https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
 
+*** Kind
+
+As a second options it's possible to use Kind instead of running it directly from Kubeadm, and let Kubelet to 
+join an already existent cluster, after creating a cluster you can fetch all the data to externally access it:
+
+{{<highlight shell>}}
+$ kind create cluster
+Creating cluster "kind" ...
+ ✓ Ensuring node image (kindest/node:v1.18.2) 🖼
+ ✓ Preparing nodes 📦
+...
+
+$ docker exec -it kind-control-plane sh
+root@kind-control-plane:/# kubeadm token create
+97ihyk.ytx08cps3hbn1c6e
+
+$ openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform 2>/dev/null |openssl dgst -sha256 -hex | cut -d" " -f2
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+
+$ kubectl -n kube-system get cm kubeadm-config -o json | jq ".data.ClusterStatus"
+"apiEndpoints:\n  kind-control-plane:\n    advertiseAddress: 172.18.0.2\n    bindPort: 6443\napiVersion: kubeadm.k8s.io/v1beta2\nkind: ClusterStatus\n"
+
+$ echo "172.18.0.2     kind-control-plane" >> /etc/hosts
+{{</highlight>}}
+
+Instead of initing the Kubeadm direclty, you should use join like:
+
+{{<highlight shell>}}
+root@buster:/home/vagrant# kubeadm join --token 97ihyk.ytx08cps3hbn1c6e kind-control-plane:6443 --discovery-token-ca-cert-hash sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+W0512 18:00:22.629925   11660 join.go:346] [preflight] WARNING: JoinControlPane.controlPlane settings will be ignored when control-plane flag is not set.
+...
+[kubelet-start] Downloading configuration for the kubelet from the "kubelet-config-1.18" ConfigMap in the kube-syst
+{{</highlight>}}
+
+Check the external node has connectivity with your cluster.
+
+{{<highlight shell>}}
+root@buster:/home/vagrant# kubeadm join --token 97ihyk.ytx08cps3hbn1c6e kind-control-plane:6443 --discovery-token-ca-cert-hash sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+root@buster:/home/vagrant# kubectl get nodes
+NAME                 STATUS   ROLES    AGE   VERSION
+buster               Ready    <none>   80s   v1.18.2
+kind-control-plane   Ready    master   20m   v1.18.2
+{{</highlight>}}
+
 ** Goland environment
 
 *** Stopping Kubelet
 
-The kubelet should be running via systemd you can follow with journalctl -flu kubelet.
+The kubelet should be running via systemd you can follow with journalctl -flu kubelet. 
+Copy the flags used to setup it, this is going to be used later.
 
 {{<highlight shell>}}
 /usr/bin/kubelet --bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf \
