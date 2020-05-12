@@ -190,3 +190,7 @@ actual source code.
    
 This is one way to keep a Linux development while using a MacOSX without losing full 
 capabilities like live debugging from a good IDE.
+
+** References
+
+https://github.com/vmware-tanzu/tgik/blob/master/episodes/109/README.md
