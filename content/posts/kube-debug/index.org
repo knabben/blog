@@ -130,7 +130,7 @@ $ kubectl -n kube-system get cm kubeadm-config -o json | jq ".data.ClusterStatus
 $ echo "172.18.0.2     kind-control-plane" >> /etc/hosts
 {{</highlight>}}
 
-Instead of initing the Kubeadm direclty, you should use join like:
+Instead of initing the Kubeadm directly, you should use join like:
 
 {{<highlight shell>}}
 root@buster:/home/vagrant# kubeadm join --token 97ihyk.ytx08cps3hbn1c6e kind-control-plane:6443 --discovery-token-ca-cert-hash sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
@@ -186,11 +186,9 @@ actual source code.
 
 {{< img resizedURL="/posts/kube-debug/debug.png" originalURL="./debug.png" style="width: 100%; " >}}
 
-** Final words
-   
-This is one way to keep a Linux development while using a MacOSX without losing full 
-capabilities like live debugging from a good IDE.
 
 ** References
 
-https://github.com/vmware-tanzu/tgik/blob/master/episodes/109/README.md
+[[https://twitter.com/mauilion/][@maulion]] on TGIK 109
+
+{{< youtube Rce70OkfRhI >}}
