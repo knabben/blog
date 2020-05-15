@@ -262,3 +262,6 @@ https://kubernetes.io/docs/tasks/access-application-cluster/communicate-containe
 https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/
 
 https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/
+** Listening 
+
+{{< youtube jeiH2qEoEwo >}}

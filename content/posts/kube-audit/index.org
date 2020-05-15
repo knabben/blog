@@ -1,25 +1,26 @@
 #+TITLE: Kubernetes Audit Sink
 #+DATE: 2019-11-27T10:00:00
 
-*** Introduction
+** Introduction
 
 The idea of this post is to test the Audit dynamic backend with a KIND cluster.
 
 Kubernetes has 4 stages:
 
-***** RequestReceived - The stage for events generated as soon as the audit handler receives the request, and before it is delegated down the handler chain.
-***** ResponseStarted - Once the response headers are sent, but before the response body is sent. This stage is only generated for long-running requests (e.g. watch).
-***** ResponseComplete - The response body has been completed and no more bytes will be sent.
-***** Panic - Events generated when a panic occurred.
+**** RequestReceived - The stage for events generated as soon as the audit handler receives the request, and before it is delegated down the handler chain.
+**** ResponseStarted - Once the response headers are sent, but before the response body is sent. This stage is only generated for long-running requests (e.g. watch).
+**** ResponseComplete - The response body has been completed and no more bytes will be sent.
+**** Panic - Events generated when a panic occurred.
 
 And 4 levels:
 
-***** None - don’t log events that match this rule.
-***** Metadata - log request metadata (requesting user, timestamp, resource, verb, etc.) but not request or response body.
-***** Request - log event metadata and request body but not response body. This does not apply for non-resource requests.
-***** RequestResponse - log event metadata, request and response bodies. This does not apply for non-resource requests.
+**** None - don’t log events that match this rule.
+**** Metadata - log request metadata (requesting user, timestamp, resource, verb, etc.) but not request or response body.
+**** Request - log event metadata and request body but not response body. This does not apply for non-resource requests.
+**** RequestResponse - log event metadata, request and response bodies. This does not apply for non-resource requests.
 
-*** Configuring Kind
+
+** Configuring Kind
 
 It is possible to overwrite the kubeadm configuration passing multiple extra args for the REST API server,
 to enable this it is necessary to create the following flags:
@@ -42,8 +43,7 @@ kubeadmConfigPatches:
       runtime-config: "auditregistration.k8s.io/v1alpha1=true"
 {{</highlight>}}
 
-
-*** Configuring the Audit Sink
+** Configuring the Audit Sink
 
 It's possible to set the level and stage per URL configuration setting the host these filtered events go,
 for filtering rules the parameter --audit-policy-file must be set with Policy file.
@@ -68,7 +68,7 @@ spec:
       url: "https://generic-web-site/hook"
 {{</highlight>}}
 
-*** Starting kind
+** Starting kind
 
 To start the KIND with the configuration file and setup the Audit Sink:
 
@@ -123,3 +123,7 @@ This is an example from the KIND cluster:
   ]
 }
 {{</highlight>}}
+
+** Listening 
+
+{{< youtube aVdR6JeEyT8 >}}

@@ -428,3 +428,6 @@ https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-accou
 https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes/
 https://kubernetes.io/docs/tasks/configure-pod-container/share-process-namespace/
+** Listening 
+
+{{< youtube G5FDls2byWI >}}

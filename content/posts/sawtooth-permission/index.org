@@ -108,3 +108,6 @@ I have added opentelemetry capabilities in the Identity for testing propose, you
 {{< img resizedURL="/posts/sawtooth-permission/role.png" originalURL="./hosts.png" style="width: 100%; " >}}
 
 More details in the fork: https://github.com/knabben/sawtooth-core/tree/master/families/identity/sawtooth_identity
+** Listening 
+
+{{< youtube V3ADK6gsDGg >}}

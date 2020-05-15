@@ -255,3 +255,7 @@ https://kubernetes.io/docs/tasks/extend-kubectl/kubectl-plugins/
 [[https://www.amazon.com/Cloud-Native-DevOps-Kubernetes-Applications/dp/1492040762][Cloud Native DevOps with Kubernetes]]
 
 [[https://www.amazon.com/Kubernetes-Running-Dive-Future-Infrastructure/dp/1492046531][Kubernetes Up & Running]]
+
+** Listening 
+
+{{< youtube 4MDcSfuRzV0 >}}

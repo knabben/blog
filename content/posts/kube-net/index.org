@@ -201,3 +201,6 @@ https://kubernetes.io/docs/tasks/run-application/run-single-instance-stateful-ap
 https://kubernetes.io/docs/tasks/run-application/run-replicated-stateful-application/
 
 https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/
+** Listening 
+
+{{< youtube fU7hZ3smj0g >}}

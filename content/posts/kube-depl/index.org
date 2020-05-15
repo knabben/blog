@@ -193,3 +193,5 @@ https://kubernetes.io/docs/tasks/run-application/run-single-instance-stateful-ap
 https://kubernetes.io/docs/tasks/run-application/rolling-update-replication-controller/
 https://kubernetes.io/docs/tasks/debug-application-cluster/debug-pod-replication-controller/
 https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set/
+** Listening 
+{{< youtube 8tc9u67JNBc >}}

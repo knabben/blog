@@ -204,3 +204,7 @@ Checking the logs again, the container id must change the process restarted shou
 grep "v=\"1\"" /var/log/pods/kube-system_kube-apiserver-3k8s-control-plane_0797ccfaf5f7fdcb42366fbf39918d66/kube-apiserver/0.log
 2019-12-26T01:02:18.63612087Z stderr F I1226 01:02:18.635346       1 flags.go:33] FLAG: --v="1"
 {{</highlight>}}
+
+** Listening 
+
+{{< youtube U4XOZeJb2ZQ >}}

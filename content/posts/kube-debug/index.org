@@ -186,9 +186,10 @@ actual source code.
 
 {{< img resizedURL="/posts/kube-debug/debug.png" originalURL="./debug.png" style="width: 100%; " >}}
 
-
 ** References
 
 [[https://twitter.com/mauilion/][@maulion]] on TGIK 109
+
+**  Listening
 
 {{< youtube Rce70OkfRhI >}}
