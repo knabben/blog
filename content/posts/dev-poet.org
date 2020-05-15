@@ -93,7 +93,7 @@ sawtooth-2-cb4966b64-429zg    6/6     Running   0          56m
 {{</highlight>}}
 
 ** Some important highlights
-
+   
 Lets create some alias to facilitate our life:
 
 {{<highlight shell>}}
@@ -175,3 +175,7 @@ NUM  BLOCK_ID                                                                   
 The version 1.0.5 still have the consensus mechanism coupled in sawtooth-core, this only changed after 1.1, but for sure the recommended version is latest 1.2.3. 
 The other trick part here (if you get the Kubernetes/Docker from newer versions) is the change from sawtooth.consensus.algorithm=poet to sawtooth.consensus.algorithm.name=poet
 settings in newer version, since the system gives you no hints from this problem, and only rolls back to DevMode.
+
+** Listening 
+
+{{< youtube ibQq1FZITMc >}}

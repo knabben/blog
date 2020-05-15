@@ -404,7 +404,7 @@ plt.plot(bins, 1/(sigma * np.sqrt(2 * np.pi)) *
 
 {{</highlight>}}
 
-[[file:output_4_1.png]]
+{{< img resizedURL="/posts/prob/output_4_1.png" originalURL="./output_4_1.png" style="width: 50%; " >}}
 
 ** Standard normal distribution
 
@@ -472,7 +472,13 @@ print( norm(mu, sigma).cdf(136) - 0.5)
 0.341344746069
 {{</highlight>}}
 
-** Bibliography
+
+** Listening
+
+{{< youtube YsYD_lmK-KE >}}
+
+** Reference
 
 ***** [1] http://www.greenteapress.com/thinkbayes/thinkbayes.pdf
 ***** [2] http://shop.oreilly.com/product/0636920023074.do
+

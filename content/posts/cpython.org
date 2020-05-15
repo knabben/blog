@@ -209,9 +209,9 @@ After more walkthrough, we can get the algorithm that Python uses to order lists
 
 ** Listening
 
-<iframe width="420" height="315" src="https://www.youtube.com/embed/lY_2qqfZfz8" frameborder="0" allowfullscreen></iframe>
+{{< youtube XsB0HDBsNbI >}}
 
-** Bibliography
+** Reference
 
 ***** [1] http://podoliaka.org/2016/04/10/debugging-cpython-gdb/
 ***** [2] https://wiki.python.org/moin/DebuggingWithGdb

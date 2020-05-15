@@ -141,5 +141,5 @@ We can create more dashboards with InnoDB storage details and Slave replication 
 On the next posts I'll show how to integrate the AlertManager and integrate it with Slack for chatops.
 
 ** Listening
- 
-{{< youtube Zx0Q5SZ4l2Q >}}
+
+{{< youtube mOHU4co1iYo >}}

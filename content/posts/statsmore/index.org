@@ -2,7 +2,7 @@
 #+DATE: 2017-10-12
 
 * Simple linear regression
-
+  
 ** Introduction
 
 This is again a collection of notes about stats and finance, with focus on covariance, correlation and simple linear regression, the idea here is to analyse some tools to measure risk. For a better representation let's get some Bovespa companies from the sector of Cyclic Consumption, they are: MGLU3, BTOW3, LAME3, LREN3.
@@ -35,8 +35,7 @@ sec_returns = sec_data.pct_change(1)[1:]
 sec_returns.cumsum().plot()
 {{</highlight>}}
 
-[[file:cumsum.png]]
-
+{{< img resizedURL="/posts/statsmore/cumsum.png" originalURL="./cumsum.png" style="width: 50%; " >}}
 
 {{<highlight python>}} 
 # Some numbers about the anual return
@@ -56,7 +55,7 @@ print(sec_returns.std() * 250 ** 0.5)
 sec_returns.hist(bins=50);
 {{</highlight>}}
 
-[[file:histogram-50.png]]
+{{< img resizedURL="/posts/statsmore/histogram-50.png" originalURL="./histogram-50.png" style="width: 50%; " >}}
 
 *** Covariance
 
@@ -86,7 +85,7 @@ IBOV   0.054705  0.048674  0.034721  0.040986  0.042769
 scatter_matrix(sec_returns, figsize=(8,8), alpha=0.2, hist_kwds={'bins':50});
 {{</highlight>}}
 
-[[file:scatter-stock.png]]
+{{< img resizedURL="/posts/statsmore/scatter-stock.png" originalURL="./scatter-stock.png" style="width: 50%; " >}}
 
 *** Correlation
 
@@ -178,9 +177,7 @@ plt.xlabel('Ibov Value');
 plt.ylabel('LAME3 Value');
 {{</highlight>}}
 
-[[file:linear-reg-lame3.png]]
-
-
+{{< img resizedURL="/posts/statsmore/linear-reg-lame3.png" originalURL="./linear-reg-lame3.png" style="width: 50%; " >}}
 
 {{<highlight python>}} 
 *** Exercises: Suppose those are the grades of some students, answer the following: 
@@ -204,7 +201,7 @@ df['y2'] = round(df['bio'] ** 2, 1)
 plt.scatter(df['math'], df['bio'])
 {{</highlight>}}
 
-[[file:exercise-linear.png]]
+{{< img resizedURL="/posts/statsmore/exercise-linear.png" originalURL="./exercise-linear.png" style="width: 50%; " >}}
 
 {{<highlight python>}} 
 Answer:
@@ -224,8 +221,6 @@ c) stat.intercept + (stat.slope * 6.5)
 
 * ANOVA
 
-
-
 Variance analysis is a way to test the validity of a null hypothesis and check if the arithmetic means of two or populations are equal. For this case, it is being analyzed three different methods of teaching, and the student's grade for each method, having a significance level of 1%.
 
 
@@ -242,7 +237,8 @@ data = pd.DataFrame({
 data.boxplot()
 {{</highlight>}}
 
-[[file:boxplot-anova.png]]
+
+{{< img resizedURL="/posts/statsmore/bloxplot-anova.png" originalURL="./boxplot-anova.png" style="width: 50%; " >}}
 
 *** Testing in 4 steps
 
@@ -275,7 +271,8 @@ f_value, _ = stats.f_oneway(data['I'], data['II'], data['III'])
 
 We have the F_value = 1.09 < critical_value = 6.93, and cannot reject the null hypothesis what finishes the conclusion: the arithmetic mean are equal for the three population
 
-*** Exercises
+
+** Exercises
 
 A director of a company wants to buy a new screw machine, you must learn about the brands from a determined period each one independently makes the following number of screws, our null hypothesis here is to confirm there's no difference between the mean volume of pieces each machine can build. The significance level is 5%.
 
@@ -338,3 +335,7 @@ null_hypothesis_true = f_value > 3.68
 | error  | 30.24  | 15 | 2.01   |       |
 | total  | 74.84  | 17 |        |       |
 {{</highlight>}}
+
+** Listening 
+
+{{< youtube 7PmUtmfTmbg >}}

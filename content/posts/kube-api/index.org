@@ -228,3 +228,6 @@ For more information:
 {{<highlight shell>}}
 https://blog.openshift.com/kubernetes-deep-dive-code-generation-customresources/
 {{</highlight>}}
+** Listening 
+
+{{< youtube DtEf3aj46pY >}}

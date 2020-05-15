@@ -211,6 +211,7 @@ Variance:  21.0857
 StdDev:  4.59
 {{</highlight>}}
 
+
 *  Frequency distribution
 
 ** Python Notes on Statistics
@@ -370,7 +371,8 @@ import seaborn
 distribution['freq_dist'].plot(kind='bar')
 {{</highlight>}}
 
-[[file:output_15_1.png]]
+
+{{< img resizedURL="/posts/stats/output_15_1.png" originalURL="./output_15_1.png" style="width: 50%; " >}}
 
 {{<highlight python>}}
 distribution['percentage'].plot.pie(
@@ -378,8 +380,7 @@ distribution['percentage'].plot.pie(
 ).axis('off')
 {{</highlight>}}
 
-[[file:output_16_1.png]]
-
+{{< img resizedURL="/posts/stats/output_16_1.png" originalURL="./output_16_1.png" style="width: 50%; " >}}
 
 ** Quantitative
 
@@ -497,7 +498,8 @@ df = create_classes_df(sample, num_classes)
 out = plt.hist(sample, bins=num_classes)
 {{</highlight>}}
 
-[[file:output_23_0.png]]
+
+{{< img resizedURL="/posts/stats/output_23_0.png" originalURL="./output_23_0.png" style="width: 60%; " >}}
 
 ** Exercises
 
@@ -546,8 +548,7 @@ v, bins, _ = plt.hist(data, 6)
 #       129.        ]
 {{</highlight>}}
 
-
-[[file:output_27_1.png]]
+{{< img resizedURL="/posts/stats/output_27_1.png" originalURL="./output_27_1.png" style="width: 60%; " >}}
 
 {{<highlight python>}}
 # 3 - Number of accidents by month grouping is in the following table, find the cumulative frequency, relative frequency and percentage:
@@ -584,7 +585,9 @@ df.set_index('time_sleep', inplace=True)
 df.plot(subplots=df.plot(kind='bar'))
 {{</highlight>}}
 
-[[file:output_31_1.png]]
-[[file:output_31_2.png]]
+{{< img resizedURL="/posts/stats/output_31_1.png" originalURL="./output_31_1.png" style="width: 60%; " >}}
+{{< img resizedURL="/posts/stats/output_31_2.png" originalURL="./output_31_2.png" style="width: 60%; " >}}
 
+** Listening 
 
+{{< youtube 9pCRGk3P57M>}}

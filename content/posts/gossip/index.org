@@ -155,3 +155,6 @@ validator_factory("tcp://127.0.0.1:8800",initial_peer_endpoints=[])
 # Gossip Peer 2 - DEALER "client" - 8801
 validator_factory("tcp://127.0.0.1:8801",initial_peer_endpoints=["tcp://127.0.0.1:8800"])
 {{</highlight>}}
+** Listening 
+
+{{< youtube v4xZUr0BEfE >}}

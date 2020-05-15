@@ -205,3 +205,7 @@ https://doc.rust-lang.org/book/ch12-00-an-io-project.html
 The book is free and a good read:
 
 https://doc.rust-lang.org/book/
+
+** Listening 
+
+{{< youtube TvDU3veYWbo >}}

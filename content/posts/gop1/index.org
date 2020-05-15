@@ -301,3 +301,7 @@ func main() {
 	fmt.Println(Sqrt(100))
 }
 {{</highlight>}}
+
+** Listening 
+
+{{< youtube tyEFAjT9HrY >}}

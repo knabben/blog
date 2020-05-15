@@ -107,3 +107,7 @@ One of the websites I had crawled a long time ago, had some captchas to move on,
 ** Conclusion
 
 This was a quick post just to remember the power we have when ignoring the lame interfaces corps provides us to access the data, and use good methodologies and tools to grab it instead.
+
+** Listening 
+
+{{< youtube rkMt4GudJzg >}}

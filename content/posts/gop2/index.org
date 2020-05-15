@@ -437,3 +437,7 @@ Select allows multiplexing these operations:
     fmt.Println("Should return true:", Same(tree.New(1), tree.New(1)))
   }
 {{</highlight>}}
+
+** Listening
+
+{{< youtube Z_8E31NNxAo >}}

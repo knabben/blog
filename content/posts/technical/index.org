@@ -25,8 +25,7 @@ data['Close'].describe()
 data['Close'].plot()
 {{</highlight>}}
 
-[[file:price.png]]
-
+{{< img resizedURL="/posts/technical/price.png" originalURL="./price.png" style="width: 50%; " >}}
 
 ** Moving average
 
@@ -105,8 +104,7 @@ for n in range(0, rolling + 1):
 test_data.plot(color=['#F00000', '#0000FF', '#0000FF', '#0000FF'])
 {{</highlight>}}
 
-[[file:moving.png]]
-
+{{< img resizedURL="/posts/technical/moving.png" originalURL="./moving.png" style="width: 50%; " >}}
 
 ** Exponentially Weighted Moving Average
 
@@ -132,8 +130,7 @@ print(test_data[['AAPL','AAPL_EWM1']])
 test_data[['AAPL','AAPL_EWM1']].plot()
 {{</highlight>}}
 
-[[file:ewma.png]]
-
+{{< img resizedURL="/posts/technical/ewma.png" originalURL="./ewma.png" style="width: 50%; " >}}
 
 ** Bollinger Bands 
 
@@ -153,8 +150,7 @@ data_2017[ ['Close', 'SMA1', 'BB_LOWER', 'BB_UPPER'] ].plot(
     color=['#000000', '#0000FF', '#FF0000', '#FF0000'])
 {{</highlight>}}
 
-[[file:bollinger.png]]
-
+{{< img resizedURL="/posts/technical/bollinger.png" originalURL="./bollinger.png" style="width: 90%; " >}}
 
 ** Basic strategy
 
@@ -172,8 +168,7 @@ data_2017['SIGNAL'] = data_2017.apply(lambda x: 1 if x['SMA1'] > x['SMA2'] else 
 data_2017[['Close', 'SMA1', 'SMA2', 'SIGNAL']].plot(secondary_y='SIGNAL', figsize=(20,8))
 {{</highlight>}}
 
-[[file:strategy.png]]
-
+{{< img resizedURL="/posts/technical/strategy.png" originalURL="./strategy.png" style="width: 90%; " >}}
 
 ** Keltner channels and EWM
 
@@ -196,10 +191,13 @@ data_2017[['Close', 'K_MIDDLE', 'K_UPPER', 'K_LOWER']].plot(
     color=['#000000', '#0000FF', '#FF0000', '#FF0000'])
 {{</highlight>}}
 
-[[file:keltner.png]]
+{{< img resizedURL="/posts/technical/keltner.png" originalURL="./keltner.png" style="width: 90%; " >}}
 
+** Listening 
 
-** Bibliography
+{{< youtube 3L4YrGaR8E4 >}}
+
+** Reference
 
 ***** [1] Clif Droke, Moving Averages Simplified
 ***** [2] Lemos, Flavio. Análise Técnica dos Mercados Financeiros

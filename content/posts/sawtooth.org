@@ -141,3 +141,7 @@ with the permissioned capability makes Sawtooth a very fast, reliable and secure
 blockchains.
 
 If you want to learn more [[https://github.com/hyperledger/education-sawtooth-simple-supply][Sawtooth Simple Supply]] is a good source of documentation and examples.
+
+** Listening
+
+{{< youtube 3cBvA5lp66c >}}

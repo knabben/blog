@@ -193,3 +193,7 @@ Don't forget to add an username and password to InfluxDB and Grafana in a produc
 other good practice can be move these argument configurations to the validator.toml file inside a configmap. 
 Other than that have fun checking where these metrics come from in the source code, you will be amazed how much
 you can learn from that.
+
+** Listening
+
+{{< youtube h7Xz1J5tmGs >}}

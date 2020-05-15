@@ -332,18 +332,17 @@ Start the loop curl request and checkout the servicegraph, based on prometheus d
 while true; do curl -d '{"value":  "myvalue" }' http://${INGRESS_ADDRESS}/v1/damage; done
 {{</highlight>}}
 
-[[file:istio-1.png]]
-
+{{< img resizedURL="/posts/sm/istio-1.png" originalURL="./istio-1.png" style="width: 60%; " >}}
 
 This is a good example of your services flow, after you can track your request via opentracing and Zipkin:
 
-[[file:istio-2.png]]
+{{< img resizedURL="/posts/sm/istio-2.png" originalURL="./istio-2.png" style="width: 60%; " >}}
 
 
 Or you can check out both services usage on Grafana, the metrics are grabbed automatically.
 
-[[file:istio-5.png]]
-[[file:istio-3.png]]
+{{< img resizedURL="/posts/sm/istio-5.png" originalURL="./istio-5.png" style="width: 60%; " >}}
+{{< img resizedURL="/posts/sm/istio-3.png" originalURL="./istio-3.png" style="width: 60%; " >}}
 
 *** Custom HTTP metric
 
@@ -373,8 +372,7 @@ spec:
 
 You can create new Grafana visualizations in the dashboard from Prometheus metrics.
 
-[[file:istio-4.png]]
-
+{{< img resizedURL="/posts/sm/istio-4.png" originalURL="./istio-4.png" style="width: 60%; " >}}
 
 *** Playing around with Mixer adapter
 
@@ -382,7 +380,11 @@ You can create new Grafana visualizations in the dashboard from Prometheus metri
 
  https://github.com/knabben/librato-adapter
 
-*** Bibliography
+** Listening 
+
+{{< youtube 1SiZiXPa3_k >}}
+
+** Reference
 
 ***** [1] https://github.com/kelseyhightower/kubernetes-the-hard-way
 ***** [2] http://blog.christianposta.com/istio-workshop/slides/#/title
