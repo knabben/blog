@@ -185,13 +185,10 @@ We can see the split between the two boxes, there's still a high response time a
 
 ** Listening
 
- <iframe width="420" height="315" src="https://www.youtube.com/embed/VTndWNNzJiQ" frameborder="0" allowfullscreen></iframe>
+{{< youtube R0IUR4gkPIE >}}
 
-
-** Bibliography
+** Reference
 
 ***** [1] http://tsung.erlang-projects.org/
 ***** [2] https://github.com/knabben/kaboom
 ***** [3] http://aws.amazon.com/pt/elasticloadbalancing/
-
-   

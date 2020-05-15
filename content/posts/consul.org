@@ -135,7 +135,11 @@ vagrant@n2:~$ curl http://localhost:8500/v1/kv/web/k1/
 The value is on base64.
 
 
-** Bibliography
+** Listening 
+
+{{< youtube UALIYasMErM >}}
+
+** Reference
 
 **** [1] - NEWMAN, Sam. Building Microservices. O'Reilly, 2005.
 **** [2] - TURNBULL, James. The Docker Book, 2014.

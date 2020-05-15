@@ -10,8 +10,7 @@ So we already have an infrastructure, we just need two more containers, the firs
 
 ** Performance Analysis
 
-Prometheus have two pieces of software that we will use for metrics gathering, the first one is an AWS metrics exporter (https://github.com/prometheus/cloudwatch_exporter), the other one is the mysqld_exporter.
-
+Prometheus have two pieces of software that we will use for metrics gathering, the first one is an AWS metrics [[https://github.com/prometheus/cloudwatch_exporter][exporter]], the other one is the mysqld_exporter.
 
 ** Initialization
 
@@ -142,5 +141,5 @@ We can create more dashboards with InnoDB storage details and Slave replication 
 On the next posts I'll show how to integrate the AlertManager and integrate it with Slack for chatops.
 
 ** Listening
-
-<iframe width="420" height="315" src="https://www.youtube.com/embed/Zx0Q5SZ4l2Q" frameborder="0" allowfullscreen></iframe>
+ 
+{{< youtube Zx0Q5SZ4l2Q >}}
