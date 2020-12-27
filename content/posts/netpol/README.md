@@ -30,7 +30,7 @@ clusters:
 Use this command to start the test suite:
 
 ```
-KUBERNETES_SERVICE_HOST=127.0.0.1 KUBERNETES_SERVICE_PORT=44055 \
+KUBERNETES_SERVICE_HOST=127.0.0.1 KUBERNETES_SERVICE_PORT=39913 \
     _output/local/bin/linux/amd64/e2e.test \
     --provider=local \
     --ginkgo.focus="Netpol" \
@@ -219,4 +219,4 @@ sandbox:~$ kind cluster create
 ## More information
 
 * @jayunit100 - test matrix - https://github.com/kubernetes/kubernetes/pull/91592
-* Initial setup post - https://jayunit100.blogspot.com/2020/11/testing-api-change-in-k8s-hacklocal-up.html
+* Initial setup post - https://jayunit100.blogspot.com/2020/05/visualize-networkpolicies-as-truthtables.html
