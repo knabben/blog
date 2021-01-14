@@ -1,4 +1,4 @@
-#+TITLE: Kubernetes container
+#+TITLE: Kubernetes Container API
 #+DATE: 2019-12-28T10:00:00Z
 
 ** Container from PodSpec
@@ -243,16 +243,26 @@ Non-terminated Pods:         (10 in total)
 
 ** Tasks
 
-https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/ 
+https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/
+
 https://kubernetes.io/docs/tasks/inject-data-application/define-environment-variable-container/
+
 https://kubernetes.io/docs/tasks/inject-data-application/distribute-credentials-secure/
+
 https://kubernetes.io/docs/tasks/debug-application-cluster/debug-init-containers/
+
 https://kubernetes.io/docs/tasks/debug-application-cluster/debug-pod-replication-controller/
+
 https://kubernetes.io/docs/tasks/debug-application-cluster/crictl/
+
 https://kubernetes.io/docs/tasks/debug-application-cluster/determine-reason-pod-failure/
+
 https://kubernetes.io/docs/tasks/debug-application-cluster/get-shell-running-container/
+
 https://kubernetes.io/docs/tasks/access-application-cluster/list-all-running-container-images/
+
 https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/
+
 https://kubernetes.io/docs/tasks/configure-pod-container/attach-handler-lifecycle-event/
 
 https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/

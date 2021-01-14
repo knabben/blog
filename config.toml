@@ -1,8 +1,14 @@
 languageCode = "en-us"
 title = "AK"
 theme = "ananke"
-baseURL = "http://knabben.github.io/"
+baseURL = "http://thefind.live/"
 googleAnalytics = "UA-46699622-2"
 
 [params]
   custom_css = ["css/custom.css"]
+  description = "sdaf"
+  site_logo = ""
+  twitter = "https://twitter.com/ak_ndb"
+  github = "https://github.com/knabben/"
+  linkedin = "https://www.linkedin.com/in/amim/"
+	recent_posts_number = 10

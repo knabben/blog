@@ -1,5 +1,5 @@
 +++
-title = "Network Policy E2E"
+title = "Network Policy E2E test suite"
 description = "Walkthrough on netpol E2E framework"
 date = "2020-12-27"
 markup = "mmark"
