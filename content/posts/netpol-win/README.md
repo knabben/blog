@@ -87,7 +87,7 @@ discoverable. To find the commands with unapproved verbs, run the Import-Module 
 parameter. For a list of approved verbs, type Get-Verb.
 Downloaded [https://dl.k8s.io/v1.20.4/kubernetes-node-windows-amd64.tar.gz] => [C:\Users\amim_knabben\AppData\Local\Temp\2\tmp7111.tar.gz]
 ...
-Starting Calico...
+* Starting Calico...
 This may take several seconds if the vSwitch needs to be created.
 Waiting for Calico initialisation to finish...
 Waiting for Calico initialisation to finish...StoredLastBootTime , CurrentLastBootTime 20210301012833.499350+000
@@ -101,7 +101,7 @@ devbox                                         Ready    control-plane,master   2
 windows-1.us-east1-b.c.kflow-294915.internal   Ready    <none>                 21h   v1.20.4
 ```
 
-*** Found some DNS ISSUES, didn't waste much time on it. **
+** Found some DNS ISSUES, didn't waste much time on it. **
 
 ### Trying Calico on EKS 
 
@@ -118,7 +118,8 @@ This Calico version CNI on v1.7.8 works fine
 https://raw.githubusercontent.com/aws/amazon-vpc-cni-k8s/c1658d5c5d401ad271c4fe6c8fbd96ba4a01d638/config/v1.7/calico.yaml
 
 Just make sure you have the correct architecture binary from:
-curl -LO https://dl.k8s.io/release/v1.20.0/bin/windows/amd64/kubectl.exe
+
+* `curl -LO https://dl.k8s.io/release/v1.20.0/bin/windows/amd64/kubectl.exe`
 
 ### Initial netpol on Win
 
@@ -129,11 +130,11 @@ The nodeSelector with `windows` needs to be explicit in the pod creation:
   thePod.Spec.NodeSelector = map[string]string{
       "kubernetes.io/os": "windows",
   }
-{{ endhighlight }}
+{{</highlight>}}
 
 Otherwise this the Pod will be on Pending status with:
 
-`pod does not have label vpc.amazonaws.com/PrivateIPv4Address`
+* `pod does not have label vpc.amazonaws.com/PrivateIPv4Address`
 
 Some other examples on Windows:
 https://docs.projectcalico.org/getting-started/windows-calico/demo
