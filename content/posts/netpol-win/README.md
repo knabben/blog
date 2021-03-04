@@ -109,7 +109,8 @@ Instead, give another try using EKS as the following guide exemplifies:
 
 https://github.com/tigera-solutions/install-calico-for-windows
 
-The simpler method is to go without EKS and eksctl managed hosts:
+A few comments here, default Network Policy does not works as `amiFamily: WindowsServer2019FullContainer`, check the correct
+AMI set below. The simpler method is to go without EKS and eksctl managed hosts:
 
 https://aws.amazon.com/blogs/containers/open-source-calico-for-windows-containers-on-amazon-eks/
 
