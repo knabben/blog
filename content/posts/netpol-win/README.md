@@ -1,5 +1,5 @@
 +++
-title = "Running netpol suite on Windows nodes"
+title = "Kubernetes Windows Nodes"
 description = "µsoft windows kubernetes playground"
 date = "2021-02-28"
 markup = "mmark"
@@ -11,7 +11,6 @@ This post is a walkthrough on using a Windows node to run network policies with
 agnhost:2.26 mappings in order to understand how suitable the netpol suite is ready for it.
 
 https://github.com/kubernetes/kubernetes/tree/master/test/e2e/network/netpol
-https://github.com/tigera-solutions/install-calico-for-windows
 
 
 ### Setting up the cluster
@@ -55,11 +54,11 @@ tigera-operator   tigera-operator-549bf46b5c-kw6ng           1/1     Running   0
 
 ### Bringing up the Windows node
 
-It's required to have at least `Windows Server 1909 (AKA 19H2 build 18362.1049 or greater), with Docker service enabled``
+It's required to have at least:
+
+* `Windows Server 1909 (AKA 19H2 build 18362.1049 or greater), with Docker service enabled``
 
 So we are using the `windows-server-1909-dc-core-for-containers-v20210212` machine, connect with RDP:
-
-image
 
 So you will be able to run ommand as Administrator using powershell. Magically following the instructions 
 on ProjectCalico tutorial will add the node on your cluster:
@@ -76,7 +75,6 @@ Copy the config from the cluster to the windows machine (from ~/.kube/config), a
 ```
 $  c:\install-calico-windows.ps1 -KubeVersion 1.20.1
 C:\CalicoWindows\kubernetes\install-kube-services.ps1
-
 
 Downloading CNI binaries
 [DownloadFile] File c:\k\cni\host-local.exe already exists.
@@ -103,6 +101,39 @@ devbox                                         Ready    control-plane,master   2
 windows-1.us-east1-b.c.kflow-294915.internal   Ready    <none>                 21h   v1.20.4
 ```
 
-### Running the Netpol suite
+*** Found some DNS ISSUES, didn't waste much time on it. **
 
-...
+### Trying Calico on EKS 
+
+Instead, give another try using EKS as the following guide exemplifies: 
+
+https://github.com/tigera-solutions/install-calico-for-windows
+
+The simpler method is to go without EKS and eksctl managed hosts:
+
+https://aws.amazon.com/blogs/containers/open-source-calico-for-windows-containers-on-amazon-eks/
+
+This Calico version CNI on v1.7.8 works fine
+
+https://raw.githubusercontent.com/aws/amazon-vpc-cni-k8s/c1658d5c5d401ad271c4fe6c8fbd96ba4a01d638/config/v1.7/calico.yaml
+
+Just make sure you have the correct architecture binary from:
+curl -LO https://dl.k8s.io/release/v1.20.0/bin/windows/amd64/kubectl.exe
+
+### Initial netpol on Win
+
+The nodeSelector with `windows` needs to be explicit in the pod creation:
+
+{{<highlight python>}} 
+  thePod := pod.KubePod()
+  thePod.Spec.NodeSelector = map[string]string{
+      "kubernetes.io/os": "windows",
+  }
+{{ endhighlight }}
+
+Otherwise this the Pod will be on Pending status with:
+
+`pod does not have label vpc.amazonaws.com/PrivateIPv4Address`
+
+Some other examples on Windows:
+https://docs.projectcalico.org/getting-started/windows-calico/demo
