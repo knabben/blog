@@ -59,7 +59,7 @@ tigera-operator   tigera-operator-549bf46b5c-kw6ng           1/1     Running   0
 
 It's required to have at least:
 
-* `Windows Server 1909 (AKA 19H2 build 18362.1049 or greater), with Docker service enabled``
+* `Windows Server 1909 (AKA 19H2 build 18362.1049 or greater), with Docker service enabled`
 
 So we are using the `windows-server-1909-dc-core-for-containers-v20210212` machine, connect with RDP:
 
