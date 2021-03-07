@@ -12,8 +12,9 @@ agnhost:2.26 mappings in order to understand how suitable the netpol suite is re
 
 https://github.com/kubernetes/kubernetes/tree/master/test/e2e/network/netpol
 
-
 ### Setting up the cluster
+
+{{< img resizedURL="/posts/netpol-win/gcp_config.png" originalURL="./gcp_config.png" style="width: 100%; " >}}
 
 Our master needs to be on Linux, so a GCP Vm with COS is being used, following 
 up the quickstart on this node:
@@ -53,6 +54,8 @@ tigera-operator   tigera-operator-549bf46b5c-kw6ng           1/1     Running   0
 ```
 
 ### Bringing up the Windows node
+
+{{< img resizedURL="/posts/netpol-win/win.png" originalURL="./win.png" style="width: 100%; " >}}
 
 It's required to have at least:
 
