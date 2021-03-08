@@ -142,3 +142,8 @@ Otherwise this the Pod will be on Pending status with:
 
 Some other examples on Windows:
 https://docs.projectcalico.org/getting-started/windows-calico/demo
+
+If you wanna dig deeper in the topic:
+
+TGIK 144 - Exploring the State of K8s on Windows
+https://www.youtube.com/watch?v=WnXnO97tsNo
