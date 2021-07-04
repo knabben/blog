@@ -35,18 +35,18 @@ local-path-storage   local-path-provisioner-78776bfc44-m7kpq        1/1     Runn
 ### Installation
 
 This workshop one is made for GCP, but we are using a local cluster with Kind, Bypass old installation methods,
-and use the latest installation on v1.20.1. lets go with the fancy edges ones:
+and use the latest installation on v1.21.1. lets use the edges ones:
 
 {{<highlight shell>}} 
 $ curl -L https://istio.io/downloadIstio | sh -
-$ cd istio-1.9.1
+$ cd istio-1.10.2
 
 # export PATH=${PWD}/bin:$PATH
 
-$ istioctl version
-client version: 1.9.1
-control plane version: 1.9.1
-data plane version: 1.9.1 (2 proxies)
+❯ istioctl version                                                                                                                                                                               [12:27:02]
+client version: 1.10.2
+control plane version: 1.10.2
+data plane version: 1.10.2 (8 proxies)
 
 istioctl install --set profile=demo -y
 ✔ Istio core installed
@@ -56,10 +56,16 @@ istioctl install --set profile=demo -y
 ✔ Installation complete
 {{</highlight>}} 
 
-The interesting part is that istio now became a daemon instead of having the components split as
-microservices, so the pods looks cleaner:
+The interesting part is that istiod now became a daemon instead of having the components split as
+microservices, so the pods looks cleaner.
 
-{{<highlight shell>}} 
+More details here:
+
+https://blog.christianposta.com/microservices/istio-as-an-example-of-when-not-to-do-microservices/
+
+{{<highlight shell>}}
+> kubectl -n istio-system get pods
+
 istio-system         istio-egressgateway-bd477794-thpxf             1/1     Running   1          16h
 istio-system         istio-ingressgateway-79df7c789f-5pp4v          1/1     Running   1          16h
 istio-system         istiod-6dc55bbdd-52gjt                         1/1     Running   1          16h
@@ -124,19 +130,17 @@ Checked 3 Istio Deployments
 
 ## Components
 
-Istiod is a pod on istio-system is your control plane, this will bring all the components
-
-https://blog.christianposta.com/microservices/istio-as-an-example-of-when-not-to-do-microservices/
-
-Some interesting points about the Evoy xDS API, they will make the data plane very customizable 
+The istiod pod in the `istio-system` is the control plane. Some interesting points about the Envoy xDS API,
+it will make the data plane very customizable: 
 
 * Listener Discovery Service - LDS
 * Endpoint Discovery Servier - EDS
 * Route Discovery Service - RDS
 
-The Identity Management is made using SPIFFE (spiffe.org).
+The Identity Management is made using the SPIFFE specification (spiffe.org).
 
-Using `istioctl kube-inject` to inject a sidecar on your Pods, (or use a label istio-injection=enabled in your namespace), this will bring an Envoy on your pod and it will make your data plane.
+Using `istioctl kube-inject` to inject a sidecar on your Pods this will bring an Envoy on your
+pod and it will make your data plane, you can check the sidecar inspecting the element:
 
 {{<highlight shell>}} 
  containers:
@@ -156,20 +160,51 @@ Using `istioctl kube-inject` to inject a sidecar on your Pods, (or use a label i
     ...
 {{</highlight>}}
 
+It's possible to use a label istio-injection=enabled in your namespace, and all pods will
+be automatically injected.
+
+{{<highlight shell>}}
+> kubectl label namespace default istio-injection=enabled
+{{</highlight>}}
+
 ## Exposing the Ingress
 
-Testing the Ingress gateway with a simple port-forward on this lab cluster:
+Testing the Ingress gateway can be made via the LoadBalancer port or even the NodePort
+used by the host, an example of the usage in the local host:
 
-{{<highlight shell>}} 
-$ kubectl -n istio-system port-forward --address 0.0.0.0 svc/istio-ingressgateway 31310:80
-Forwarding from 0.0.0.0:31310 -> 8080
-{{</highlight>}} 
+{{<highlight shell>}}
+❯ kubectl get nodes -o wide
+NAME                 STATUS   ROLES                  AGE   VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE       KERNEL-VERSION     CONTAINER-RUNTIME
+kind-control-plane   Ready    control-plane,master   19m   v1.21.1   172.18.0.2    <none>        Ubuntu 21.04   5.8.0-55-generic   containerd://1.5.2
+
+kubectl get svc istio-ingressgateway -n istio-system
+
+NAME                   TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                                                                      AGE
+istio-ingressgateway   LoadBalancer   10.96.163.153   <pending>     15021:31061/TCP,80:30261/TCP,443:31958/TCP,31400:30417/TCP,15443:32533/TCP   15m
+
+❯ curl http://172.18.0.2:30261 -v                                                                                                                                                                [12:35:00]
+*   Trying 172.18.0.2:30261...
+* TCP_NODELAY set
+* Connected to 172.18.0.2 (172.18.0.2) port 30261 (#0)
+> GET / HTTP/1.1
+> Host: 172.18.0.2:30261
+> User-Agent: curl/7.68.0
+> Accept: */*
+>
+* Mark bundle as not supporting multiuse
+  < HTTP/1.1 404 Not Found
+  < date: Sun, 04 Jul 2021 15:35:03 GMT
+  < server: istio-envoy
+  < content-length: 0
+  <
+* Connection #0 to host 172.18.0.2 left intact
+{{</highlight>}}
 
 ## Example workload
 
 {{<highlight shell>}} 
-$ kubectl apply -f samples/bookinfo/platform/kube/bookinfo.yaml
-$ kubectl get services
+> kubectl apply -f samples/bookinfo/platform/kube/bookinfo.yaml
+> kubectl get services
 NAME          TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
 apigateway    ClusterIP   10.96.232.173   <none>        80/TCP     81m
 catalog       ClusterIP   10.96.5.33      <none>        80/TCP     86m
@@ -183,7 +218,7 @@ reviews       ClusterIP   10.96.174.147   <none>        9080/TCP   3m52s
 Add a gateway and the virtualservice
 
 {{<highlight shell>}} 
-$ kubectl apply -f samples/bookinfo/networking/bookinfo-gateway.yaml
+> kubectl apply -f samples/bookinfo/networking/bookinfo-gateway.yaml
 gateway.networking.istio.io/bookinfo-gateway created
 virtualservice.networking.istio.io/bookinfo created
 {{</highlight>}} 
@@ -250,7 +285,7 @@ kubernetes    ClusterIP   10.96.0.1       <none>        443/TCP    26h
 productpage   ClusterIP   10.96.2.169     <none>        9080/TCP   11m
 ratings       ClusterIP   10.96.28.162    <none>        9080/TCP   11m
 reviews       ClusterIP   10.96.174.147   <none>        9080/TCP   11m
-{{</highlight>}} 
+{{</highlight>}}
 
 ## visualization
 
@@ -262,5 +297,5 @@ Kali is available to watch the traffic and mapping the services.
 
 Other explorations on istio on next posts:
 
-- Networking - client side load balance, service discovery, circuit breaking, bulk heading, timeout, retry, mirroring
+- Networking and traffic management - client side load balance, service discovery, circuit breaking, bulk heading, timeout, retry, mirroring..
 - Security - SPIFFE, mTLS
