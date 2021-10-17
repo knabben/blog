@@ -18,9 +18,12 @@ img {
   width: 80% !important;
 }
 
+iframe {
+  width: 70% !important;
+}
 
 img.logos {
-  width: 80px !important;
+  width: 90px !important;
   padding-bottom: 2em !important;
 }
 
