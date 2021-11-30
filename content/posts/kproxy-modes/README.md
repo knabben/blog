@@ -272,6 +272,8 @@ local-path-storage   rancher.io-local-path   <none>                             
 local-path-storage   rancher.io-local-path   <none>                                                  4d3h
 ```
 
+UPDATE: @jayunit100 had filled an issue - `https://github.com/kubernetes-sigs/kind/issues/2453`
+
 The big upper circle is the `syncProxyRules`, and it is what matters for this post.
 
 ### Starting the proxy
