@@ -6,7 +6,7 @@ googleAnalytics = "UA-46699622-2"
 
 [params]
   custom_css = ["css/custom.css"]
-  description = "sdaf"
+  description = "HTP and others BS"
   site_logo = ""
   twitter = "https://twitter.com/ak_ndb"
   github = "https://github.com/knabben/"
