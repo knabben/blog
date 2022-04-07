@@ -1,7 +1,7 @@
 languageCode = "en-us"
 title = "knabben"
 theme = "ananke"
-baseURL = "http://thefind.live/"
+baseURL = "https://knabben.github.io/"
 googleAnalytics = "UA-46699622-2"
 
 [params]
