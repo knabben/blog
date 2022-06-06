@@ -1,4 +1,6 @@
 languageCode = "en-us"
+disqusShortname = "blog-ak"
+
 title = "knabben"
 theme = "ananke"
 baseURL = "https://knabben.github.io/"
