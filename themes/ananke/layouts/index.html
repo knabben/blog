@@ -9,11 +9,27 @@
     {{/* Derive the section name  */}}
     {{ $section_name := index (.Site.Params.mainSections) 0 }}
 
-    <div class="pa3 pa4-ns w-100 w-70-ns center">
+    <div class="pa3 pa4-ns w-80 w-80-ns center">
 
       <section class="w-100" style="display: table;">
-        <div class="w-100" style="display: table-row;">
-          <div style="display: table-cell; text-align: right">
+        
+      </section>
+
+      {{ $n_posts := $.Param "recent_posts_number" | default 3 }}
+
+      <section class="w-100" style="display: table;">
+        <div class="w-90" style="vertical-align:top; display: table-cell;">
+          <div style="width: 100%;">
+            {{ range (first $n_posts $section) }}
+            <div>
+              {{ partial "summary-with-image.html" . }}
+            </div>
+            {{ end }}
+          </div>
+        </div>
+
+        <div class="w-10" style="vertical-align:top; display: table-cell;">
+          <div style="text-align: right; ">
             <img class="logos" src="images/cks-cert.png"/>
             <img class="logos" src="images/cka-cert.png" />
             <img class="logos" src="images/ckad-cert.png" />
@@ -23,21 +39,7 @@
             <img class="logos" src="images/vcta-am-cert.png" />
           </div>
         </div>
-      </section>
-
-      {{ $n_posts := $.Param "recent_posts_number" | default 3 }}
-
-      <section class="w-100" style="display: table;">
-        <div class="w-100" style="display: table-row;">
-          <div style="width: 90%; display: table-cell;">
-            {{ range (first $n_posts $section) }}
-            <div>
-              {{ partial "summary-with-image.html" . }}
-            </div>
-            {{ end }}
-          </div>
-        </div>
-
+        
       </section>
 
       {{ if ge $section_count (add $n_posts 1) }}
