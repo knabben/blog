@@ -1,9 +1,9 @@
 languageCode = "en-us"
 disqusShortname = "blog-ak"
 
-title = "knabben"
+title = "OPSSEC.in"
 theme = "ananke"
-baseURL = "https://knabben.github.io/"
+baseURL = "https://opssec.in/"
 googleAnalytics = "UA-46699622-2"
 
 [params]
