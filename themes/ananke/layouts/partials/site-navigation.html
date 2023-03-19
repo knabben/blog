@@ -8,11 +8,13 @@
       {{ if .Site.Menus.main }}
         <ul class="pl0 mr3">
           {{ range .Site.Menus.main }}
-          
           {{ end }}
         </ul>
       {{ end }}
 
+      <ul class="pl0 mr3" style="color: white">
+          <a style="text-decoration: none; color: white" href="https://md.opssec.in/winapi/init.html">win32 api</a>
+      </ul >
       {{ partialCached "social-follow.html" . }}
     </div>
   </div>
