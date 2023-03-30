@@ -5,6 +5,7 @@ date = "2023-03-30"
 markup = "mmark"
 +++
 
+
 ## Introduction
 
 That's a common question, what kind of workloads can you run on Windows clusters? In this post we are going to check the possibilities and how to build and run these services on a Windows cluster. There's a plenty of examples on all languages and build process spread over the Internet. This document intends to enumerate and list them for a quick review and reference. 
