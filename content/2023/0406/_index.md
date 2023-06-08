@@ -84,7 +84,7 @@ After deducing the error is in the CNI, I increased the log level of the agent t
 And start measuring how long the stack call was between them, if you notice we have around ~5 seconds of the event receive and the
 complete success.
 
-![data](./images/data.jpg "data")
+![data](./images/data.jpg?width=500px "data")
 
 There some other process to find these bottlenecks like `go pprof` that can build a call tree and measure it.
 Or its possible to add `klog.Info` statements between the calls and continue measuring them until you find the

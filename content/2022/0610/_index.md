@@ -61,7 +61,7 @@ Besides that BGP has Finite State Machine with Idle, Connect, Active, OpenSent, 
 
 Enough theory, bootup your `install71.iso`, for this lab you will need 2 machines that can at least ping each other.
 
-![BGP](./images/diagram1.jpg "BGP")
+![BGP](./images/diagram1.jpg?width=800px "BGP")
 
 | Machine | IP address         | ASN    |
 |---------|--------------------|--------|

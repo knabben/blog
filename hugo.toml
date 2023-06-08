@@ -1,7 +1,7 @@
 baseURL = 'https://opssec.in/'
 languageCode = 'en-us'
 theme = 'hugo-theme-learn'
-title = 'another forced brain'
+title = 'compulsory thinking'
 
 [params]
 themeVariant = "blue"

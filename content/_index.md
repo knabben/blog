@@ -1,12 +1,5 @@
 # Amim Knabben 
 
-{{% notice note %}}
-Infrastructure, operations, and Kubernetes engineer with 15+ years of experience
-driving the evolution of open source and proprietary cloud products, with a focus on
-transparent, fun, and highly collaborative team building alongside customer-focused
-product engineering.
-{{% /notice %}}
-
 {{< rawhtml >}}
 <div style="align-items: center; justify-content: center; text-align: center; display: flex">
 <img src="images/ambassador-2023.png?width=140px" alt="ambassador" style="margin-right: 20px; !important">
@@ -18,6 +11,14 @@ product engineering.
 <img src="images/ckad-cert.png?width=140px" alt="ckad" style="margin-right: 20px; !important">
 </div>
 {{< /rawhtml >}}
+
+{{% notice note %}}
+Infrastructure, operations, and Kubernetes engineer with 15+ years of experience
+driving the evolution of open source and proprietary cloud products, with a focus on
+transparent, fun, and highly collaborative team building alongside customer-focused
+product engineering.
+{{% /notice %}}
+
 
 #### Other resources
 

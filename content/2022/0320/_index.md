@@ -17,7 +17,7 @@ This cluster was generated using the ` make create-workload-cluster` from the CA
 
 The diagram describes the [CRDs](https://cluster-api.sigs.k8s.io/developer/crd-relationships.html) and objects created related to this Workload cluster inside Azure.
 
-![CAPZ schema](./images/capz.png "CAPZ")
+![CAPZ schema](./images/capz.png?width=1024px "CAPZ")
 
 
 It's possible to list the objects inside the management cluster.
