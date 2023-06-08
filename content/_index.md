@@ -7,6 +7,18 @@ transparent, fun, and highly collaborative team building alongside customer-focu
 product engineering.
 {{% /notice %}}
 
+{{< rawhtml >}}
+<div style="text-align: center; display: flex">
+<img src="images/ambassador-2023.png?width=140px" alt="ambassador" style="margin-right: 20px; !important">
+<img src="images/bigcat.png?width=140px" alt="ambassador" style="margin-right: 20px; !important">
+<img src="images/speaker-2022.png?width=140px" alt="speaker" style="margin-right: 20px; !important">
+<img src="images/sigstore.png?width=140px" alt="sigstore" style="margin-right: 20px; !important">
+<img src="images/cks-cert.png?width=140px" alt="cks" style="margin-right: 20px; !important">
+<img src="images/cka-cert.png?width=140px" alt="cka" style="margin-right: 20px; !important">
+<img src="images/ckad-cert.png?width=140px" alt="ckad" style="margin-right: 20px; !important">
+</div>
+{{< /rawhtml >}}
+
 #### Other resources
 
 * [win32](https://md.opssec.in)
