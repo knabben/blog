@@ -1,11 +1,11 @@
 baseURL = 'https://opssec.in/'
 languageCode = 'en-us'
 theme = 'hugo-theme-learn'
-title = 'Forced Brain'
+title = 'another forced brain'
 
 [params]
 themeVariant = "blue"
-disableLandingPage = false
+disableLandingPageButton = true
 
 
 [outputs]
