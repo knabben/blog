@@ -1,7 +1,12 @@
 baseURL = 'https://opssec.in/'
 languageCode = 'en-us'
 theme = 'hugo-theme-learn'
-title = 'Complex Computer Definitions'
+title = 'Forced Brain'
+
+[params]
+themeVariant = "blue"
+disableLandingPage = false
+
 
 [outputs]
 home = [ "HTML", "RSS" ]

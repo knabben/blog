@@ -32,12 +32,33 @@
     font-weight: 300;
     src: url("../fonts/Work_Sans_300.eot?#iefix") format("embedded-opentype"), url("../fonts/Work_Sans_300.woff") format("woff"), url("../fonts/Work_Sans_300.woff2") format("woff2"), url("../fonts/Work_Sans_300.svg#WorkSans") format("svg"), url("../fonts/Work_Sans_300.ttf") format("truetype");
 }
+
 @font-face {
-    font-family: 'Work Sans';
+    font-family: 'FiraCodeNerd';
+    font-style: normal;
+    font-weight: 300;
+    src: url("../fonts/FiraCodeNerdFont-Regular.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: 'Ubuntu';
+    font-style: normal;
+    font-weight: 300;
+    src: url("../fonts/UbuntuNerdFont-Regular.ttf") format("truetype");
+}
+
+@font-face {
     font-style: normal;
     font-weight: 500;
     src: url("../fonts/Work_Sans_500.eot?#iefix") format("embedded-opentype"), url("../fonts/Work_Sans_500.woff") format("woff"), url("../fonts/Work_Sans_500.woff2") format("woff2"), url("../fonts/Work_Sans_500.svg#WorkSans") format("svg"), url("../fonts/Work_Sans_500.ttf") format("truetype");
 }
+@font-face {
+    font-family: 'Inconsolata';
+    font-style: normal;
+    font-weight: 100;
+    src: url("../fonts/Inconsolata.eot?#iefix") format("embedded-opentype"), url("../fonts/Work_Sans_500.woff") format("woff"), url("../fonts/Work_Sans_500.woff2") format("woff2"), url("../fonts/Work_Sans_500.svg#WorkSans") format("svg"), url("../fonts/Inconsolata.ttf") format("truetype");
+}
+
 body {
     background: #fff;
     color: #777;
@@ -115,6 +136,14 @@ textarea:focus, input[type="email"]:focus, input[type="number"]:focus, input[typ
     width: 8rem;
     height: 2rem;
 }
+
+#header-logo {
+  font-family: "Inconsolata", "Work Sans", "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif;
+  font-size: 1.6em;
+  text-align: center;
+  color: white;
+}
+
 #header #logo-svg path {
     fill: #fff;
 }
@@ -427,7 +456,7 @@ textarea:focus, input[type="email"]:focus, input[type="number"]:focus, input[typ
     max-width: 80%;
 }
 #chapter h3 {
-    font-family: "Work Sans", "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif;
+    font-family: "Ubuntu", "Work Sans", "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif;
     font-weight: 300;
     text-align: center;
 }
@@ -448,13 +477,13 @@ textarea:focus, input[type="email"]:focus, input[type="number"]:focus, input[typ
     margin: 0;
 }
 body {
-    font-family: "Work Sans", "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif;
+    font-family: "Ubuntu", "Work Sans", "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif;
     font-weight: 300;
     line-height: 1.6;
     font-size: 18px !important;
 }
 h2, h3, h4, h5, h6 {
-    font-family: "Work Sans", "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif;
+    font-family: "Ubuntu", "Work Sans", "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif;
     text-rendering: optimizeLegibility;
     color: #5e5e5e;
     font-weight: 400;
@@ -624,8 +653,8 @@ section.attachments.grey .attachments-files {
 }
 
 code, kbd, pre, samp {
-    font-family: "Consolas", menlo, monospace;
-    font-size: 92%;
+    font-family: "FiraCodeNerd", "Inconsolata", "Consolas", menlo, monospace;
+    font-size: 90%;
 }
 code {
     border-radius: 2px;
