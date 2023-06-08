@@ -1,7 +1,0 @@
-{{- $resizedURL := .Get "resizedURL" -}}
-{{- $originalURL := .Get "originalURL" -}}
-{{- $alt := .Get "alt" -}}
-{{- $class := .Get "class" -}}
-{{- $style := .Get "style" -}}
-
-<img src="{{ $resizedURL | relURL }}" alt="{{ $alt }}" class="{{ $class }}" style="{{ $style | safeCSS }}">

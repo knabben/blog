@@ -1,0 +1,7 @@
+baseURL = 'https://opssec.in/'
+languageCode = 'en-us'
+theme = 'hugo-theme-learn'
+title = 'Complex Computer Definitions'
+
+[outputs]
+home = [ "HTML", "RSS" ]
