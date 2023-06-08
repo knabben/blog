@@ -8,7 +8,7 @@ product engineering.
 {{% /notice %}}
 
 {{< rawhtml >}}
-<div style="text-align: center; display: flex">
+<div style="align-items: center; justify-content: center; text-align: center; display: flex">
 <img src="images/ambassador-2023.png?width=140px" alt="ambassador" style="margin-right: 20px; !important">
 <img src="images/bigcat.png?width=140px" alt="ambassador" style="margin-right: 20px; !important">
 <img src="images/speaker-2022.png?width=140px" alt="speaker" style="margin-right: 20px; !important">
