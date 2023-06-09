@@ -86,6 +86,8 @@ The server signs a small amount of data received from the client with its own pr
 private pair from the public one in the cert), this way the server proves that it owns the 
 certificate. 
 
+At this step the client can send his own certificate for server authentication this is known as [mutual tls]({{< ref "#mutual-tls" >}}).
+
 The change cipher spec protocol is used to alter the secret sent between the server and the client
 and let the other party know that it has generated the session key and is going to switch to 
 encrypted communication.
@@ -155,62 +157,182 @@ depth=2: C = US, O = Internet Security Research Group, CN = ISRG Root X1
 The most well known client tool for this task is `openssl`, these SSL/TLS toolkits are very used 
 in the CLI for management of keys and certificates, other tools exists like [Cloudfare's PKI and TLS toolkit](https://github.com/cloudflare/cfssl).
 
-First step is to create the CA private and public key 
+First step is to create the CA certificate, this command generates the private key at the same time.
 
 ```shell
-# Generate a new key pair
-
-$ openssl genpkey \
-    -algorithm x448 \
-    -out certs/root_keypair.pem
-
-# Print out the keypair values
-
-$ openssl pkey \
-    -in certs/root_keypair.pem \
-    -noout -text
-
-X448 Private-Key:
-priv:
-    b8:19:8b:9e:6d:5f:93:06:2a:72:f8:a0:c8:7e:d1:
-    a6:c5:e9:c6:56:8e:08:91:da:03:e7:f6:53:8a:ed:
-    99:89:ff:9d:19:ca:37:d9:d5:93:1b:0d:ba:23:32:
-    20:49:bf:f7:0f:79:58:cf:fb:2b:de
-pub:
-    6d:fa:2e:0b:f9:0c:29:59:77:92:ec:9b:06:50:2a:
-    16:31:01:6d:e7:29:87:d9:b6:68:1c:20:89:fb:e2:
-    d9:6a:c7:21:47:85:e9:e3:a2:63:c7:41:22:9c:93:
-    c9:2c:1b:5c:8b:72:cd:60:cf:03:7b
+$ openssl req \
+    -x509 \
+    -nodes \ 
+    -newkey rsa:4096 \
+    -days 365 \ 
+    -keyout tls/certs/root-keypair.pem \
+    -out tls/certs/root-cert.pem \
+    -subj "/CN=Root CA" \
 ```
 
-Generate the CA CSR and CA certificate with the following commands:
+Final Root CA is on `tls/certs/root-cert.pem`.
+You can use mage file and check this project with the target `mage tls:genRootCA` from [knabben/tutorial-istio-sec/1-grpc](https://github.com/knabben/tutorial-istio-sec/tree/main/1-grpc)
+
+Generate the client CSR and certificate under `tls/certs/client-cert.pem` and `tls/certs/client-keypair.pem`:
 
 ```shell
-# Generate a CSR for the CA
+# Client certificate using the CA to sign in
 
-$ openssl req -new \
-    -subj "/CN=Root CA" \                           # Define your DN here
-    -addext "basicConstraints=critical,CA=TRUE" \   # Extensions
-    -key tls/certs/root_keypair.pem \
-    -out tls/certs/root_csr.pem
+$ openssl req \
+    -nodes \
+    -newkey rsa:4096 \
+    -keyout "tls/certs/client-keypair.pem" \
+    -out "tls/certs/client-csr.pem" \
+    -subj "/OU=client,CN=localhost"
 
-# Generate the CA
+$ openssl x509 \
+    -req \
+    -in "tls/certs/client-csr.pem" \
+    -days 60 \
+    -CAcreateserial \
+    -CA "tls/certs/root-cert.pem" \
+    -CAkey "tls/certs/root-keypair.pem" \
+    -out "tls/certs/client-cert.pem" \
+    -extfile "./tls/ext.conf"
+```
 
-$ openssl x509 req \
-    -in tls/certs/root_csr.pem \        # CSR file
-    -key tls/certs/root_keypair.pem \   # Private Key
-    -out tls/certs/root_cert.pem" \     # Final Certificate
-    -copy_extensions copyall \
+Generate the server CSR and certificate under `tls/certs/server-cert.pem` and `tls/certs/server-keypair.pem`:
+
+```shell
+# Server CSR 
+
+$ openssl req \
+    -nodes \
+    -newkey "rsa:4096" \
+    -keyout "tls/certs/server-keypair.pem" \
+    -out "tls/certs/server-csr.pem" \
+    -subj "/OU=server,CN=localhost"
+
+# Server certificate using the CA as well
+
+$ openssl x509 \
+    -req -in tls/certs/server-csr.pem\
     -days 365 \
+    -CAcreateserial \
+    -CA "tls/certs/root-cert.pem" \
+    -CAkey "tls/certs/root-keypair.pem" \
+    -out "tls/certs/server-cert.pem" \
+    -extfile" "./tls/ext.conf"
 ```
 
-Final Root CA is on `tls/certs/root_cert.pem`.
+{{% notice info %}}
+The `ext.conf` contains an subjectAltName extension for communication since CN hostname check is deprecated
+Let the IP as `0.0.0.0` with the content being: `subjectAltName=DNS:localhost,IP:0.0.0.0`
+{{% /notice %}}
 
-### Mutual TLS
+You can use mage file and check this project with the target `mage tls:genClientCert || tls:genServerCert` from [knabben/tutorial-istio-sec/1-grpc](https://github.com/knabben/tutorial-istio-sec/tree/main/1-grpc)
 
 ## gRPC 
 
-gRPC has SSL/TLs integration and propotes the use of TLS to authenticate the server and to encrypt all data
-exchange between the client and server.
-## cert-manager
+It is a modern high performance Remote Procedure Call (RPC) framework with multiples language support
+has a simple definition of schema normally made with Protocol Buffers, and uses HTTP/2 as a communication
+protocol being a good improvement of the HTTP allowing multiplexing requests over a single connection,
+streaming interations, etc. [gRPC](https://grpc.io) is a CNCF accepted project on Inbucation level, and
+its widely used by CNCF projects. 
 
+For this example lets use [Protobuf](https://protobuf.dev) as the schema and underlaying message interchange format between the
+services, from the official FAQ gRPC largely follows HTTP semantics over HTTP/2 but we explicitly allow for full-duplex streaming. 
+We diverge from typical REST conventions as we use static paths for performance reasons during call dispatch as parsing call parameters from paths, 
+query parameters and payload body adds latency and complexity. We have also formalized a set of errors that we believe are more 
+directly applicable to API use cases than the HTTP status codes.
+
+### Mutual TLS
+
+gRPC has SSL/TLs integration and proposes the use of TLS to authenticate the server and to encrypt all data
+exchange between the client and server. [This](https://medium.com/@mertkimyonsen/securing-grpc-connection-with-ssl-tls-certificate-using-go-db3852fe89dd) is a good post about the topic.
+
+For the client side we need to start a new pool of certificates and append the Root CA cert on it,
+this is used later in the configuration of the client request. Load the X509 key pair and client certificate
+this is passed in the `tls.Config`, and will be provided to the server as soon it send its own.
+
+```golang
+var (
+    rootCA  = "./tls/certs/root-cert.pem"
+    cert    = "./tls/certs/client-cert.pem"
+    keypair = "./tls/certs/client-keypair.pem"
+)
+
+func main() {
+    pool := x509.NewCertPool()
+
+	rootBytes, err := os.ReadFile(rootCA)
+	if err != nil {
+		return nil, err
+	}
+
+	if !pool.AppendCertsFromPEM(rootBytes) {
+		return nil, err
+	}
+
+	certificate, err := tls.LoadX509KeyPair(*cert, *keypair)
+	if err != nil {
+		return nil, err
+	}
+
+	trsnportCred := credentials.NewTLS(&tls.Config{
+		Certificates: []tls.Certificate{certificate},
+		RootCAs:      pool,
+	})
+
+    conn, err := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(transportCred))
+
+    // ...
+}
+```
+
+The use of `grpc.WithTransportCredentials`, makes the connection aware of the client cert and the pool of cert created
+when dialing to the server.
+
+For the server side, the setup is pretty similar, one important option though is the `config.ClientAuth` settings, its possible
+to allow the user connect without any encryption, or force him to send the certificate with: `tls.RequireAndVerifyClientCert`
+
+```golang
+var (
+    rootCA = "./tls/certs/root-cert.pem"
+    cert = "./tls/certs/server-cert.pem"
+    keypair = "./tls/certs/server-keypair.pem"
+)
+
+func main() {
+	pool := x509.NewCertPool()
+
+	rootBytes, err := os.ReadFile(*rootCA)
+	if err != nil {
+		return nil, err
+	}
+
+	if !pool.AppendCertsFromPEM(rootBytes) {
+		return nil, err
+	}
+
+	certificate, err := tls.LoadX509KeyPair(*cert, *keypair)
+	if err != nil {
+		return nil, err
+	}
+
+	// configuration of the certificate what we want to
+	transportCred := credentials.NewTLS(&tls.Config{
+		Certificates: []tls.Certificate{certificate},
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    pool,
+	})
+
+    server := grpc.NewServer(grpc.Creds(transportCred))
+    
+    // ...
+}
+```
+
+## Conclusion
+
+PKI management is challenging on a microservice environment, the gRPC support for authentication with mTLS is pretty basic,
+a few other libraries and more robust and complete projects like SPIFFE can take care of the actual Service Identity management 
+on a dynamic environment like Kubernetes. The real burden of managing the certificates (expiration, CN, lifecycle maintainence)
+must be automated in conjunction with the microservice that is going to use it.
+
+What do you use? and how is your approach to manage Service Identity?
