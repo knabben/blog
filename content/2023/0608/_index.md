@@ -146,15 +146,65 @@ in particular Lets Encrypt is has an Intermediate CA (R3) that signs the opssec.
 opssec.in: OK
 Chain:
 depth=0: CN = opssec.in (untrusted)
-depth=1: C = US, O = Let's Encrypt, CN = R3
+depth=1: C = US, O = Lets Encrypt, CN = R3
 depth=2: C = US, O = Internet Security Research Group, CN = ISRG Root X1
 ```
 
 ### Generating certificates
 
 The most well known client tool for this task is `openssl`, these SSL/TLS toolkits are very used 
-in the CLI for management of keys and certificates, on this post it will be used [Cloudfare's PKI and TLS toolkit](https://github.com/cloudflare/cfssl).
+in the CLI for management of keys and certificates, other tools exists like [Cloudfare's PKI and TLS toolkit](https://github.com/cloudflare/cfssl).
 
+First step is to create the CA private and public key 
+
+```shell
+# Generate a new key pair
+
+$ openssl genpkey \
+    -algorithm x448 \
+    -out certs/root_keypair.pem
+
+# Print out the keypair values
+
+$ openssl pkey \
+    -in certs/root_keypair.pem \
+    -noout -text
+
+X448 Private-Key:
+priv:
+    b8:19:8b:9e:6d:5f:93:06:2a:72:f8:a0:c8:7e:d1:
+    a6:c5:e9:c6:56:8e:08:91:da:03:e7:f6:53:8a:ed:
+    99:89:ff:9d:19:ca:37:d9:d5:93:1b:0d:ba:23:32:
+    20:49:bf:f7:0f:79:58:cf:fb:2b:de
+pub:
+    6d:fa:2e:0b:f9:0c:29:59:77:92:ec:9b:06:50:2a:
+    16:31:01:6d:e7:29:87:d9:b6:68:1c:20:89:fb:e2:
+    d9:6a:c7:21:47:85:e9:e3:a2:63:c7:41:22:9c:93:
+    c9:2c:1b:5c:8b:72:cd:60:cf:03:7b
+```
+
+Generate the CA CSR and CA certificate with the following commands:
+
+```shell
+# Generate a CSR for the CA
+
+$ openssl req -new \
+    -subj "/CN=Root CA" \                           # Define your DN here
+    -addext "basicConstraints=critical,CA=TRUE" \   # Extensions
+    -key tls/certs/root_keypair.pem \
+    -out tls/certs/root_csr.pem
+
+# Generate the CA
+
+$ openssl x509 req \
+    -in tls/certs/root_csr.pem \        # CSR file
+    -key tls/certs/root_keypair.pem \   # Private Key
+    -out tls/certs/root_cert.pem" \     # Final Certificate
+    -copy_extensions copyall \
+    -days 365 \
+```
+
+Final Root CA is on `tls/certs/root_cert.pem`.
 
 ### Mutual TLS
 
