@@ -1,6 +1,6 @@
 +++
 title = "Secure gRPC services with mTLS"
-description = "Hacking golang gRPC services and mTLS setup"
+description = "Setting up golang gRPC services and mTLS authentication"
 date = "2023-06-08"
 +++
 
@@ -12,10 +12,8 @@ to enable built-in mechanisms capable to not only secure the traffic via TLS enc
 using SSL/TLS X.509 certificates.
 
 This post will detail and demonstrate a client/server implementation that uses gRPC as a protocol of communication
-and uses these TLS certificates for channels credentials.
-
-The last part introduces `cert-manager` another CNCF project for PKI management inside Kubernetes clusters,
-and its going to move the application to containers and use automatic generated certs instead.
+and uses these TLS certificates for channels credentials. Projects like `cert-manager`, a CNCF project, can be used for PKI management 
+inside Kubernetes clusters if you are using container workload in production.
 
 ## TLS and SSL
 
@@ -327,6 +325,7 @@ func main() {
     // ...
 }
 ```
+Full code examples can be find in [this repo](https://github.com/knabben/tutorial-istio-sec/tree/main/1-grpc/grpc).
 
 ## Conclusion
 
