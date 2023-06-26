@@ -31,23 +31,33 @@ Name (SAN) extension.
 
 {{< mermaid >}}
 flowchart LR
-    agent_1 --> Server_API
-    agent_2 --> Server_API
+    agent_1-->Server_API
+    agent_2-->Server_API
 
-    subgraph agent_1
-    workload_api_1
+    subgraph agent_1[Agent]
+      workloadapi1
     end
 
-    workload_1 --> workload_api_1
+    workload1[Workload] --> workloadapi1[API]
 
-    subgraph agent_2
-    workload_api_2
+    subgraph agent_2[Agent]
+      workloadapi2
     end
 
-    workload_2 --> workload_api_2
+    workload2[Workload] --> workloadapi2[API]
+
+        
+    classDef ctrl fill:#1568ca,color:white,stroke-width:1px,stroke:#dbffff;
+    classDef normal fill:#007cff,color:white,stroke-width:1px,stroke:#dbfff;
+    classDef cluster fill:#fff,stroke:#bbb,stroke-width:2px,color:#326ce5;
+
+    class agent_1,agent_2 normal;
+    class Server_API normal;
+    class workload1,workload2 normal;
+    class workloadapi1,workloadapi2 ctrl;
+
 {{< /mermaid >}}
-
-
+    
 Server API manages and issues identities in a SPIFFE trust domain, hold information
 about its agents and workloads. Uses registration entites for Agents and Workloads
 
