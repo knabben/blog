@@ -90,8 +90,11 @@ method of the server.
 
 * `install-cni` daemoset in `ambient` mode.
   * copies `istio-cni` to `/opt/cni/bin`
+    * `istio-cni` when called via CmdAdd add himself to the `ipset` list 
+    * add routes to communicate with the ztunnel pod
   * creates kubeconfig for the service account the pod runs under (ZZZ-istio-cni-kubeconfig)
   * injects the CNI plugin config to the CNI config file
+  * creates iptables rules to forward traffic from the `ipset` to the ztunnel
 
 
 Each pod in the node will generate an event and the Ztunnels one have a special treatment, the first
