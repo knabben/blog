@@ -170,8 +170,30 @@ If you check the rules created in the node with `iptables-save`, you will see so
 ```
 
 The first `cleanupNode` will fail because there will be no rules created, the commands can be seen bellow.
-`CreateRulesOnNode` initializes the routing, firewall and ipset rules on the node, besides that
-it creates a Geneve tunnel from the node to the the ztunnel pod: 
+`CreateRulesOnNode` initializes the routing, firewall and ipset rules on the node, this ipset is used to
+save a list of IPs of pods in the node and in the ambient mesh.
+
+```shell
+Try `ipset help' for more information.
+root@ambient-worker2:/# ipset list
+Name: ztunnel-pods-ips
+Type: hash:ip
+Revision: 0
+Header: family inet hashsize 1024 maxelem 65536
+Size in memory: 280
+References: 1
+Number of entries: 1
+Members:
+10.244.1.7
+```
+
+As stated in the list the match-set mark the packets as 0x100.
+It creates a Geneve tunnel from the node to the the ztunnel pod, and the requiring table and routes.
+The table 101 for example foward all the traffic to 192.168.127.2 (the geneve endpoint of the ztunnel)
+and rules 101 do for all the packets marked as 0x100 (all the pods in the mesh).
+
+This flow is well explained on [this](https://www.youtube.com/watch?v=WOq4pxEHkwg) video series.
+
 
 ```shell
 2023-06-28T20:44:57.644303Z     debug   ambient CreateRulesOnNode: ztunnelVeth=veth87a7244e, ztunnelIP=10.244.1.5
