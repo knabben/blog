@@ -23,7 +23,6 @@ appb-76b56f7cb4-qkjl7                 1/1     Running   0          4m29s   10.24
 appb-istio-waypoint-6f8dfd8d4-565jx   1/1     Running   0          3m58s   10.244.1.10   ambient-worker    <none>           <none>
 ```
 
-
 ### Architecture
 
 {{<mermaid align="center">}}
@@ -67,81 +66,14 @@ to localhost TCP `15001` where the ztunnel is listenning.
 The destination is in another host where it receives the HBONE encapsuled packet on 15008 (pistioin), 
 with the actual destination still being the pod in the mesh (`appb`). To read more about the [HBONE](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/http/upgrades#tunneling-tcp-over-http) tunnel.
 
+A good overview of the flow is described [here](https://www.solo.io/blog/traffic-ambient-mesh-ztunnel-ebpf-waypoint/).
+
 For same node, we just access it directly rather than making a full network connection.
 We *could* apply this to all traffic, rather than just for destinations that are "captured"
 However, we would then get inconsistent behavior where only node-local pods have RBAC enforced.
 
 ```rust
   if req.request_type == RequestType::DirectLocal && can_fastpath {
-```
-
-When the pod is on a different node a HBONE HTTP Connect overlay pool is created between
-both nodes.
-
-```rust
-    // outbound.rs
-    let mut connection = self.pi.pool.connect(pool_key.clone(), connect).await?;
-
-    let mut f = http_types::proxies::Forwarded::new();
-    f.add_for(remote_addr.to_string());
-
-    let request = hyper::Request::builder()
-        .uri(&req.destination.to_string())
-        .method(hyper::Method::CONNECT)
-        .version(hyper::Version::HTTP_2)
-        .header(
-            BAGGAGE_HEADER,
-            baggage(&req, self.pi.cfg.cluster_id.clone()),
-        )
-        .header(FORWARDED, f.value().unwrap())
-        .header(TRACEPARENT_HEADER, self.id.header())
-        .body(Empty::<Bytes>::new())
-        .unwrap();
-
-    let response = connection.send_request(request).await?;
-
-    let code = response.status();
-    if code != 200 {
-        return Err(Error::HttpStatus(code));
-    }
-    let mut upgraded = hyper::upgrade::on(response).await?;
-
-    super::copy_hbone(
-        &mut upgraded,
-        &mut stream,
-        &self.pi.metrics,
-        transferred_bytes,
-    )
-    .instrument(trace_span!("hbone client"))
-    .await
-```
-
-For inbound (15008) the request is handled via `serve_connect` on each new connection on this port, it filters the Method:CONNECT (HBONE),
-fetch the workload with XDS, and apply any RBAC on L4 in the connection, if everything is ok `handle_inbound` starts a stream with `freebind_connection`
-and the actual destination, the stream/response is finally forwarded back through the tunnel and the caller.
- 
-```rust
-   // inbound.rs : 195
-    Hbone(req) => match hyper::upgrade::on(req).await {
-        Ok(mut upgraded) => {
-            if let Err(e) = super::copy_hbone(
-                &mut upgraded,
-                &mut stream,
-                &metrics,
-                transferred_bytes,
-            )
-            .instrument(trace_span!("hbone server"))
-            .await
-            {
-                error!(dur=?start.elapsed(), "hbone server copy: {}", e);
-            }
-        }
-        Err(e) => {
-            // Not sure if this can even happen
-            error!(dur=?start.elapsed(), "No upgrade {e}");
-        }
-    },
-
 ```
 
 ### xDS configuration
@@ -208,6 +140,112 @@ $ kubectl -n istio-system exec -it ztunnel-nnd8m -- curl http://localhost:15000/
   },
 }
 ```
+
+### Testing locally
+
+It's possible to mock the xDS and start the ztunnel locally. After compiled, set the following parameters:
+
+```shell
+source ./scripts/local.sh
+❯ source ./scripts/local.sh
+❯ export ZTUNNEL_REDIRECT_USER="iptables1"
+redirect-user-setup
+redirect-to 15001
+sudo iptables -t nat -D OUTPUT -p tcp -m owner --uid-owner 1001 -m comment --comment local-redirect-to -j REDIRECT --to-ports 15001
+sudo ip6tables -t nat -D OUTPUT -p tcp -m owner --uid-owner 1001 -m comment --comment local-redirect-to -j REDIRECT --to-ports 15001
+Redirecting calls from UID 1001 to 15001
+
+Try: sudo -u iptables1 curl
+```
+
+This will setup rules locally to redirect all traffic from the user `iptables1` to 15001 TCP, the outbound port from ztunnel, start
+the ztunnel using these parameters:
+
+```
+ RUST_LOG=trace XDS_ADDRESS="" FAKE_CA="true" LOCAL_XDS_PATH=./examples/localhost.yaml  ./out/rust/debug/ztunnel
+2023-07-01T01:59:56.788024Z  INFO ztunnel: version: version.BuildInfo{Version:"ea748c65254a64dcb644f2b3aae54ed05c3ea53e-dirty", GitRevision:"ea748c65254a64dcb644f2b3aae54ed05c3ea53e-dirty", RustVersion:"1.65.0", BuildStatus:"Modified", GitTag:"1.19.0-alpha.1-2-gea748c6", IstioVersion:"unknown"}
+2023-07-01T01:59:56.788486Z  INFO ztunnel: running with config: window_size: 4194304
+connection_window_size: 4194304
+frame_size: 1048576
+```
+
+When the pod is on a different node a HBONE HTTP Connect overlay pool is created between both nodes. With the destination being the
+istionin port of the destination node:
+
+![outbound](./images/outbound.png "outbound")
+
+The following piece of code illustrate this request via tunnel on `src/outbound.rs`:
+
+```rust
+    let mut connection = self.pi.pool.connect(pool_key.clone(), connect).await?;
+
+    let mut f = http_types::proxies::Forwarded::new();
+    f.add_for(remote_addr.to_string());
+
+    let request = hyper::Request::builder()
+        .uri(&req.destination.to_string())
+        .method(hyper::Method::CONNECT)
+        .version(hyper::Version::HTTP_2)
+        .header(
+            BAGGAGE_HEADER,
+            baggage(&req, self.pi.cfg.cluster_id.clone()),
+        )
+        .header(FORWARDED, f.value().unwrap())
+        .header(TRACEPARENT_HEADER, self.id.header())
+        .body(Empty::<Bytes>::new())
+        .unwrap();
+
+    let response = connection.send_request(request).await?;
+
+    let code = response.status();
+    if code != 200 {
+        return Err(Error::HttpStatus(code));
+    }
+    let mut upgraded = hyper::upgrade::on(response).await?;
+
+    super::copy_hbone(
+        &mut upgraded,
+        &mut stream,
+        &self.pi.metrics,
+        transferred_bytes,
+    )
+    .instrument(trace_span!("hbone client"))
+    .await
+```
+
+The other side receives the tunneled connection and forward to the actual pod:
+
+![inbound](./images/inbound.png "inbound")
+
+For inbound (15008) the request is handled via `serve_connect [src/proxy/inbound.rs:249]` on each new connection on this port, it filters the Method:CONNECT (HBONE),
+fetch the workload with XDS, and apply any RBAC on L4 in the connection, if everything is ok `handle_inbound [src/proxy/inbound.rs:160]` starts a stream with `freebind_connection`
+and the actual destination, the stream/response is finally forwarded back through the tunnel and the caller.
+ 
+```rust
+   // inbound.rs : 195
+    Hbone(req) => match hyper::upgrade::on(req).await {
+        Ok(mut upgraded) => {
+            if let Err(e) = super::copy_hbone(
+                &mut upgraded,
+                &mut stream,
+                &metrics,
+                transferred_bytes,
+            )
+            .instrument(trace_span!("hbone server"))
+            .await
+            {
+                error!(dur=?start.elapsed(), "hbone server copy: {}", e);
+            }
+        }
+        Err(e) => {
+            // Not sure if this can even happen
+            error!(dur=?start.elapsed(), "No upgrade {e}");
+        }
+    },
+
+```
+
+
 
 
 ### Logging and metrics
