@@ -216,49 +216,61 @@ $ kubectl -n istio-system exec -it ztunnel-nnd8m -- curl http://localhost:15000/
 
 ```shell
 root@ztunnel-hq9lr:/# curl http://localhost:15020/metrics
+
 # HELP istio_tcp_connections_opened The total number of TCP connections opened.
 # TYPE istio_tcp_connections_opened counter
 istio_tcp_connections_opened_total{
-    reporter="source",source_workload="appa",source_canonical_service="appa",source_canonical_revision="v1",source_workload_namespace="default",
-    source_principal="spiffe://cluster.local/ns/default/sa/appa",source_app="appa",source_version="v1",source_cluster="Kubernetes",
-    destination_service="unknown",destination_service_namespace="unknown",destination_service_name="unknown",destination_workload="appb",destination_canonical_service="appb",
-    destination_canonical_revision="v1",destination_workload_namespace="default",
-    destination_principal="spiffe://cluster.local/ns/default/sa/appb",destination_app="appb",destination_version="v1",destination_cluster="Kubernetes",request_protocol="tcp",
-    response_flags="-",connection_security_policy="mutual_tls"} 29
+    reporter="source"
+    source_workload="appa"
+    source_canonical_service="appa"
+    source_canonical_revision="v1"
+    source_workload_namespace="default"
+    source_principal="spiffe://cluster.local/ns/default/sa/appa"
+    source_app="appa"
+    source_version="v1"
+    source_cluster="Kubernetes"
+    destination_service="unknown"
+    destination_service_namespace="unknown"
+    destination_service_name="unknown"
+    destination_workload="appb"
+    destination_canonical_service="appb"
+    destination_canonical_revision="v1"
+    destination_workload_namespace="default"
+    destination_principal="spiffe://cluster.local/ns/default/sa/appb"
+    destination_app="appb"
+    destination_version="v1"
+    destination_cluster="Kubernetes"
+    request_protocol="tcp"
+    response_flags="-"
+    connection_security_policy="mutual_tls"} 29
 
-istio_tcp_connections_opened_total{
-    reporter="source",source_workload="gateway-istio",source_canonical_service="gateway-istio",source_canonical_revision="latest",source_workload_namespace="default",
-    source_principal="spiffe://cluster.local/ns/default/sa/gateway-istio",source_app="gateway-istio",source_version="latest",source_cluster="Kubernetes",
-    destination_service="unknown",destination_service_namespace="unknown",destination_service_name="unknown",destination_workload="istiod",destination_canonical_service="istiod",
-    destination_canonical_revision="latest",destination_workload_namespace="istio-system",destination_principal="spiffe://cluster.local/ns/istio-system/sa/istiod",
-    destination_app="istiod",destination_version="latest",destination_cluster="Kubernetes",request_protocol="tcp",response_flags="-",connection_security_policy="unknown"} 2
-
-# HELP istio_tcp_connections_closed The total number of TCP connections closed.
-# TYPE istio_tcp_connections_closed counter
-istio_tcp_connections_closed_total{
-    reporter="source",source_workload="appa",source_canonical_service="appa",source_canonical_revision="v1",source_workload_namespace="default",
-    source_principal="spiffe://cluster.local/ns/default/sa/appa",source_app="appa",source_version="v1",source_cluster="Kubernetes",
-    destination_service="unknown",destination_service_namespace="unknown",destination_service_name="unknown",destination_workload="appb",
-    destination_canonical_service="appb",destination_canonical_revision="v1",destination_workload_namespace="default",destination_principal="spiffe://cluster.local/ns/default/sa/appb",
-    destination_app="appb",destination_version="v1",destination_cluster="Kubernetes",request_protocol="tcp",response_flags="-",connection_security_policy="mutual_tls"} 29
 
 # HELP istio_tcp_received_bytes The size of total bytes received during request in case of a TCP connection.
 # TYPE istio_tcp_received_bytes counter
 istio_tcp_received_bytes_total{
-    reporter="source",source_workload="appa",source_canonical_service="appa",source_canonical_revision="v1",source_workload_namespace="default",
-    source_principal="spiffe://cluster.local/ns/default/sa/appa",source_app="appa",source_version="v1",source_cluster="Kubernetes",destination_service="unknown",
-    destination_service_namespace="unknown",destination_service_name="unknown",destination_workload="appb",destination_canonical_service="appb",destination_canonical_revision="v1",
-    destination_workload_namespace="default",destination_principal="spiffe://cluster.local/ns/default/sa/appb",destination_app="appb",destination_version="v1",
-    destination_cluster="Kubernetes",request_protocol="tcp",response_flags="-",connection_security_policy="mutual_tls"} 2320
-
-# HELP istio_tcp_sent_bytes The size of total bytes sent during response in case of a TCP connection.
-# TYPE istio_tcp_sent_bytes counter
-istio_tcp_sent_bytes_total{
-    reporter="source",source_workload="appa",source_canonical_service="appa",source_canonical_revision="v1",source_workload_namespace="default",source_principal="spiffe://cluster.local/ns/default/sa/appa",
-    source_app="appa",source_version="v1",source_cluster="Kubernetes",destination_service="unknown",destination_service_namespace="unknown",
-    destination_service_name="unknown",destination_workload="appb",destination_canonical_service="appb",destination_canonical_revision="v1",
-    destination_workload_namespace="default",destination_principal="spiffe://cluster.local/ns/default/sa/appb",destination_app="appb",
-    destination_version="v1",destination_cluster="Kubernetes",request_protocol="tcp",response_flags="-",connection_security_policy="mutual_tls"} 13832
+    reporter="source"
+    source_workload="appa"
+    source_canonical_service="appa"
+    source_canonical_revision="v1"
+    source_workload_namespace="default"
+    source_principal="spiffe://cluster.local/ns/default/sa/appa"
+    source_app="appa"
+    source_version="v1"
+    source_cluster="Kubernetes"
+    destination_service="unknown"
+    destination_service_namespace="unknown"
+    destination_service_name="unknown"
+    destination_workload="appb"
+    destination_canonical_service="appb"
+    destination_canonical_revision="v1"
+    destination_workload_namespace="default"
+    destination_principal="spiffe://cluster.local/ns/default/sa/appb"
+    destination_app="appb"
+    destination_version="v1"
+    destination_cluster="Kubernetes"
+    request_protocol="tcp"
+    response_flags="-"
+    connection_security_policy="mutual_tls"} 2320
 ```
 
 Executing curl `http://appb:8000` passing traffic through the waypoint 10.244.1.10:
@@ -284,66 +296,54 @@ INFO outbound{id=94b826c34ce67957114b48cd54eb231d}: ztunnel::proxy::outbound: co
 # HELP istio_tcp_connections_opened The total number of TCP connections opened.
 # TYPE istio_tcp_connections_opened counter
 istio_tcp_connections_opened_total{
-    reporter="destination",source_workload="appb-istio-waypoint",source_canonical_service="appb-istio-waypoint",source_canonical_revision="latest",
-    source_workload_namespace="default",source_principal="spiffe://cluster.local/ns/default/sa/appb-istio-waypoint",source_app="appb-istio-waypoint",
-    source_version="latest",source_cluster="Kubernetes",destination_service="unknown",destination_service_namespace="unknown",destination_service_name="unknown",
-    destination_workload="appb",destination_canonical_service="appb",destination_canonical_revision="v1",destination_workload_namespace="default",
-    destination_principal="spiffe://cluster.local/ns/default/sa/appb",destination_app="appb",destination_version="v1",destination_cluster="Kubernetes",
-    request_protocol="tcp",response_flags="-",connection_security_policy="mutual_tls"} 79
+    reporter="destination"
+    source_workload="appb-istio-waypoint"
+    source_canonical_service="appb-istio-waypoint"
+    source_canonical_revision="latest"
+    source_workload_namespace="default"
+    source_principal="spiffe://cluster.local/ns/default/sa/appb-istio-waypoint"
+    source_app="appb-istio-waypoint"
+    source_version="latest"
+    source_cluster="Kubernetes"
+    destination_service="unknown"
+    destination_service_namespace="unknown"
+    destination_service_name="unknown"
+    destination_workload="appb"
+    destination_canonical_service="appb"
+    destination_canonical_revision="v1"
+    destination_workload_namespace="default"
+    destination_principal="spiffe://cluster.local/ns/default/sa/appb"
+    destination_app="appb"
+    destination_version="v1"
+    destination_cluster="Kubernetes"
+    request_protocol="tcp"
+    response_flags="-"
+    connection_security_policy="mutual_tls"} 79
+
 istio_tcp_connections_opened_total{
-    reporter="destination",source_workload="appa",source_canonical_service="appa",source_canonical_revision="v1",source_workload_namespace="default",
-    source_principal="spiffe://cluster.local/ns/default/sa/appa",source_app="appa",source_version="v1",source_cluster="Kubernetes",destination_service="unknown",
-    destination_service_namespace="unknown",destination_service_name="unknown",destination_workload="appb",destination_canonical_service="appb",
-    destination_canonical_revision="v1",destination_workload_namespace="default",destination_principal="spiffe://cluster.local/ns/default/sa/appb",
-    destination_app="appb",destination_version="v1",destination_cluster="Kubernetes",request_protocol="tcp",response_flags="-",connection_security_policy="mutual_tls"} 4
-
-# HELP istio_tcp_connections_closed The total number of TCP connections closed.
-# TYPE istio_tcp_connections_closed counter
-istio_tcp_connections_closed_total{
-    reporter="destination",source_workload="appa",source_canonical_service="appa",source_canonical_revision="v1",source_workload_namespace="default",
-    source_principal="spiffe://cluster.local/ns/default/sa/appa",source_app="appa",source_version="v1",source_cluster="Kubernetes",destination_service="unknown",
-    destination_service_namespace="unknown",destination_service_name="unknown",destination_workload="appb",destination_canonical_service="appb",
-    destination_canonical_revision="v1",destination_workload_namespace="default",destination_principal="spiffe://cluster.local/ns/default/sa/appb",
-    destination_app="appb",destination_version="v1",destination_cluster="Kubernetes",request_protocol="tcp",response_flags="-",connection_security_policy="mutual_tls"} 4
-istio_tcp_connections_closed_total{
-    reporter="destination",source_workload="appb-istio-waypoint",source_canonical_service="appb-istio-waypoint",source_canonical_revision="latest",
-    source_workload_namespace="default",source_principal="spiffe://cluster.local/ns/default/sa/appb-istio-waypoint",source_app="appb-istio-waypoint",
-    source_version="latest",source_cluster="Kubernetes",destination_service="unknown",destination_service_namespace="unknown",
-    destination_service_name="unknown",destination_workload="appb",destination_canonical_service="appb",destination_canonical_revision="v1",
-    destination_workload_namespace="default",destination_principal="spiffe://cluster.local/ns/default/sa/appb",destination_app="appb",
-    destination_version="v1",destination_cluster="Kubernetes",request_protocol="tcp",response_flags="-",connection_security_policy="mutual_tls"} 78
-
-# HELP istio_tcp_received_bytes The size of total bytes received during request in case of a TCP connection.
-# TYPE istio_tcp_received_bytes counter
-istio_tcp_received_bytes_total{
-    reporter="destination",source_workload="appb-istio-waypoint",source_canonical_service="appb-istio-waypoint",source_canonical_revision="latest",
-    source_workload_namespace="default",source_principal="spiffe://cluster.local/ns/default/sa/appb-istio-waypoint",source_app="appb-istio-waypoint",
-    source_version="latest",source_cluster="Kubernetes",destination_service="unknown",destination_service_namespace="unknown",
-    destination_service_name="unknown",destination_workload="appb",destination_canonical_service="appb",destination_canonical_revision="v1",
-    destination_workload_namespace="default",destination_principal="spiffe://cluster.local/ns/default/sa/appb",destination_app="appb",destination_version="v1",
-    destination_cluster="Kubernetes",request_protocol="tcp",response_flags="-",connection_security_policy="mutual_tls"} 36179
-istio_tcp_received_bytes_total{
-    reporter="destination",source_workload="appa",source_canonical_service="appa",source_canonical_revision="v1",source_workload_namespace="default",
-    source_principal="spiffe://cluster.local/ns/default/sa/appa",source_app="appa",source_version="v1",source_cluster="Kubernetes",destination_service="unknown",
-    destination_service_namespace="unknown",destination_service_name="unknown",destination_workload="appb",destination_canonical_service="appb",destination_canonical_revision="v1",
-    destination_workload_namespace="default",destination_principal="spiffe://cluster.local/ns/default/sa/appb",destination_app="appb",destination_version="v1",
-    destination_cluster="Kubernetes",request_protocol="tcp",response_flags="-",connection_security_policy="mutual_tls"} 320
-
-# HELP istio_tcp_sent_bytes The size of total bytes sent during response in case of a TCP connection.
-# TYPE istio_tcp_sent_bytes counter
-istio_tcp_sent_bytes_total{
-    reporter="destination",source_workload="appa",source_canonical_service="appa",source_canonical_revision="v1",source_workload_namespace="default",
-    source_principal="spiffe://cluster.local/ns/default/sa/appa",source_app="appa",source_version="v1",source_cluster="Kubernetes",destination_service="unknown",
-    destination_service_namespace="unknown",destination_service_name="unknown",destination_workload="appb",destination_canonical_service="appb",
-    destination_canonical_revision="v1",destination_workload_namespace="default",destination_principal="spiffe://cluster.local/ns/default/sa/appb",
-    destination_app="appb",destination_version="v1",destination_cluster="Kubernetes",request_protocol="tcp",response_flags="-",connection_security_policy="mutual_tls"} 1332
-istio_tcp_sent_bytes_total{
-    reporter="destination",source_workload="appb-istio-waypoint",source_canonical_service="appb-istio-waypoint",source_canonical_revision="latest",
-    source_workload_namespace="default",source_principal="spiffe://cluster.local/ns/default/sa/appb-istio-waypoint",source_app="appb-istio-waypoint",
-    source_version="latest",source_cluster="Kubernetes",destination_service="unknown",destination_service_namespace="unknown",destination_service_name="unknown",
-    destination_workload="appb",destination_canonical_service="appb",destination_canonical_revision="v1",destination_workload_namespace="default",
-    destination_principal="spiffe://cluster.local/ns/default/sa/appb",destination_app="appb",destination_version="v1",destination_cluster="Kubernetes",
-    request_protocol="tcp",response_flags="-",connection_security_policy="mutual_tls"} 65208
+    reporter="destination"
+    source_workload="appa"
+    source_canonical_service="appa"
+    source_canonical_revision="v1"
+    source_workload_namespace="default"
+    source_principal="spiffe://cluster.local/ns/default/sa/appa"
+    source_app="appa"
+    source_version="v1"
+    source_cluster="Kubernetes"
+    destination_service="unknown"
+    destination_service_namespace="unknown"
+    destination_service_name="unknown"
+    destination_workload="appb"
+    destination_canonical_service="appb"
+    destination_canonical_revision="v1"
+    destination_workload_namespace="default"
+    destination_principal="spiffe://cluster.local/ns/default/sa/appb"
+    destination_app="appb"
+    destination_version="v1"
+    destination_cluster="Kubernetes"
+    request_protocol="tcp"
+    response_flags="-"
+    connection_security_policy="mutual_tls"} 4
 ```
 
 Receiving from waypoint and forward to the pod IP:port
