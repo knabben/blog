@@ -10,7 +10,7 @@ There was rewrite of the Layer 4 processing of Istio in [rust](https://istio.io/
 This simplification in conjuntion with `Waypoint` Layer 7 made possible to decouple both capabilities
 allowing a more robust and straightfoward and faster implementation of a reverse proxy for 
 sidecar removal, it is called ztunnel, and that's the proxy, that offer a basic authorization
-layer 4 based on SPIFFEID node identification and encryption across services on a very transparent way.
+layer 4 based on SPIFFE ID peer/service identification and encryption transparently.
 
 After setting the ambient label in the default and listing the workloads:
 
