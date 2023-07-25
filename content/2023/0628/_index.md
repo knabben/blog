@@ -13,9 +13,9 @@ ambient, the Istio CNI plug-in installs redirection rules (based on iptables/ebp
 that captures traffic for workloads considered part of the ambient mesh, and redirects to the
 ztunnel running on the node.
  
-For the version on Ambient the `istio-cni` installed on `/opt/cni/bin/` is installed on each pod
-and will setup the networking rules, instead of being injected as `initContainers` as in the old approach,
-necessary for communication encryption and interception in the mesh.
+For the version on Ambient the `istio-cni` installed on `/opt/cni/bin/` is installed on each node
+and will setup the networking rules, instead of being injected as `initContainers` as in the old approach.
+This is required for communication encryption and interception in the mesh.
 
 ### Architecture 
 
