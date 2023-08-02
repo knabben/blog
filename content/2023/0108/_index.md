@@ -221,3 +221,66 @@ Error from server (BadRequest): admission webhook "policy.sigstore.dev" denied t
 index.docker.io/knabben/test@sha256:e72dc35fb44df0b22e7ff622b7f702de7534d573767723aaa89ee6db2cb8ac78 signature keyless validation failed for authority authority-0 for index.docker.io/knabben/test@sha256:e72dc35fb44df0b22e7ff622b7f702de7534d573767723aaa89ee6db2cb8ac78: no signatures found for image
 ```
 
+#### Using CycloneDX [Software Bill Of Material](https://www.nist.gov/itl/executive-order-14028-improving-nations-cybersecurity/software-security-supply-chains-software-1)
+
+BOM as a "formal record containing the details and supply chain relationships of various components used in building software," similar to food ingredient labels on packaging. 
+SBOMs hold the potential to provide increased transparency, provenance, and speed at which vulnerabilities can be identified and remediated by federal departments and agencies.
+
+It's possible to generate a standard SBOM CycloneDX with syft and attest the OCI image using in-toto attestations:
+
+```shell
+syft knabben/netshoot:latest -o cyclonedx-json > netshoot.sbom.json
+cosign attest --predicate netshoot.sbom.json --type cyclonedx knabben/netshoot -d
+```
+
+Validate the attestation predicateType of the OCI image is CycloneDX using cosign:
+
+```shell
+cosign verify-attestation --type cyclonedx -d knabben/netshoot \
+    --certificate-identity=user@gmail.com \
+    --certificate-oidc-issuer=https://accounts.google.com
+```
+
+Generate a ClusterImagePolicy with the CUE settings for handling the predicateType, you can check information from the predicate as well:
+
+```yaml
+apiVersion: policy.sigstore.dev/v1beta1
+kind: ClusterImagePolicy
+metadata:
+  name: image-policy
+spec:
+  images:
+  - glob: "index.docker.io/knabben/**"
+  authorities:
+  - keyless:
+      identities:
+      - issuer: https://accounts.google.com
+        subject: user@gmail.com
+    attestations:
+      - name: must-have-cyclonedx
+        predicateType: "https://cyclonedx.org/bom"
+        policy:
+          type: cue
+          data: |
+            predicateType: "https://cyclonedx.org/bom"
+            predicate: {
+                specVersion: "1.4"
+                metadata: {
+                    tools: [
+                        {
+                            name: "trivy"
+                        }
+                    ]
+                }
+            }
+```
+
+Start a new container with a SBOM attached with `syft` or change the spec version to receive a DENY after the signing is checked:
+
+```shell
+❯ kubectl run netshoot --image=docker.io/knabben/netshoot
+Error from server (BadRequest): admission webhook "policy.sigstore.dev" denied the request: validation failed: failed policy: image-policy: spec.containers[0].image
+index.docker.io/knabben/netshoot@sha256:e72dc35fb44df0b22e7ff622b7f702de7534d573767723aaa89ee6db2cb8ac78 failed evaluating cue policy for must-have-cyclonedx: failed to evaluate the policy with error: predicate.metadata.tools.0.name: conflicting values "syft" and "trivy"
+```
+
+
