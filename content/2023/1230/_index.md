@@ -30,7 +30,7 @@ sequenceDiagram
     adm->>kind: Run the E2E test suite    
 {{< /mermaid >}}
 
-## QEMU/KVM installations and Windows VMs
+### QEMU/KVM installations and Windows VMs
 
 Let's skip this in terms of complexity for now, in later posts there'll be deep dives related to the automatic installation of Windows on QEMU/KVM, on this point we part from the principle the final user already have a running version of Windows Datacenter 2019 or 2022. To enable the GUI use the Desktop Experience.
 
@@ -79,7 +79,7 @@ virsh # net-dumpxml default
 </network>
 ```
 
-## Creating a Kind cluster
+### Creating a Kind cluster
 
 The Control-plane (and a few Linux workers) are going to exist in the host using KIND, the APIServer uses the KVM/QMEU bridge address *192.168.122.1* to bind the Apiserver and 6443 TCP port, this way
 the Windows VM can access the API server and join the node in the cluster
@@ -110,7 +110,7 @@ fe9c2bf3f9e5   kindest/node:v1.27.3   "/usr/local/bin/entr…"   49 minutes ago 
 2ad0a5579ce3   kindest/node:v1.27.3   "/usr/local/bin/entr…"   49 minutes ago   Up 49 minutes                                  kind-worker
 ```
 
-## Installing Calico
+### Installing Calico with Operators
 
 All nodes are still in *NotReady* state, due the missing CNI installation, install Calico CNI using the operator, it's a pretty straight forward procedure, using v3.27.0, Windows is not hostProcess supported by default. Start creating the Tigera Operator YAML, and downloading the CR yaml:
 
@@ -162,7 +162,7 @@ Wait for the APIServer pod to be up, make sure you set StrictAffinity option in 
 $ kubectl patch ipamconfigurations default --type merge --patch='{"spec": {"strictAffinity": true}}'
 ```
 
-## Join the Windows node
+### Join the Windows node
 
 The Kind Cluster is running at this point, time to bring the Windows VM joined to our cluster,
 start installing Containerd, This script is installing latest **1.7.11**, a restart is required
