@@ -1,5 +1,5 @@
 +++
-title = "Running Windows cluster locally"
+title = "Day 0 - Running Windows cluster locally"
 description = "Challenges on running Hybrid OS clusters on local machines for development propose."
 date = "2023-12-30"
 +++
@@ -185,7 +185,13 @@ PS C:\> Invoke-WebRequest https://raw.githubusercontent.com/kubernetes-sigs/sig-
 PS C:\> c:\PrepareNode.ps1 -KubernetesVersion v1.27.3
 ```
 
-The last step after you have set append `c:\Windows\System32\drivers\etc\hosts` with `kind-control-plane 192.168.122.1` is:
+Finally, install the Kube-Proxy DaemonSet:
+
+```shell
+curl -L  https://raw.githubusercontent.com/kubernetes-sigs/sig-windows-tools/master/hostprocess/calico/kube-proxy/kube-proxy.yml | sed "s/KUBE_PROXY_VERSION/v1.27.3/g" | kubectl apply -f -
+```
+
+The last step, is to append `c:\Windows\System32\drivers\etc\hosts` with `kind-control-plane 192.168.122.1`:
 
 ```shell
 kubeadm join kind-control-plane:6443 --token ejej6v... \
@@ -216,9 +222,9 @@ Now, jf you are looking for a full test suite to ensure your cluster is ready fo
 
 ## Thoughts on automation
 
-The initial idea is to modify the "immutable" node to a mutable one using the "agent" concept. This would allow end-users to install, modify and update software during runtime or bootstrap time. All of these operations, such as bootstrapping (installing containerd, kubelet binaries and services, changing default settings) could be automated. In projects like Image-builder, these tasks are executed as custom roles through packer provisioning, and there are several golang libraries available to wrap up Ansible and reuse these tasks.
+The initial idea is to modify the "immutable" node to a mutable one using the "agent" concept. This would allow end-users to install, modify and update software during runtime or bootstrap time. All of these operations, such as bootstrapping (installing containerd, kubelet binaries and services, changing default settings) could be automated. In projects like Image-builder, these tasks are executed as custom roles through packer provisioning, and there are several golang libraries available to wrap up Ansible and reuse these tasks, as one possible solution.
 
-There are alternative options to achieve a similar outcome, such as using golang command lines execution with PowerShell in the node. This requires accessing the node via a pre-installed SSH server with PKI access for the administration user. Once the node is baked, the join procedure in the kind-created cluster in the Linux host takes place. At this point, Docker and KVM/Qemu are required.
+There are alternative options to achieve a similar outcome though, such as using golang command lines execution with PowerShell in the node. This requires accessing the node via a pre-installed SSH server with PKI access for the administration user. Once the node is baked, the join procedure in the kind-created cluster in the Linux host takes place. At this point, Docker and KVM/Qemu are required.
 
 Two important things need to be addressed to fully automate the cluster:
 
