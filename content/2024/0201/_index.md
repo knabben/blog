@@ -385,3 +385,52 @@ pv-migrate migrate \
     --dest-namespace backup \
     old-pvc new-pvc
 ```
+
+### Using [VolumeSnapshot](https://docs.vmware.com/en/VMware-vSphere-Container-Storage-Plug-in/3.0/vmware-vsphere-csp-getting-started/GUID-E0B41C69-7EEB-450F-A73D-5FD2FF39E891.html)
+
+The official solution is the usage of Volume Snapshot, install it using `bash deploy-csi-snapshot-components.sh`.
+After The CRD are installed it's possible to backup the PVC (first create VolumeSnapshotClass (for example vs-class))
+
+```yaml
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  finalizers:
+  - snapshot.storage.kubernetes.io/volumesnapshot-as-source-protection
+  - snapshot.storage.kubernetes.io/volumesnapshot-bound-protection
+  name: pvc-snapshot
+  namespace: default
+spec:
+  source:
+    persistentVolumeClaimName: windows-pvc
+  volumeSnapshotClassName: vs-class
+```
+
+The restore is simple, create a PVC and point the datasource to the VolumeSnapshot just created:
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-restore
+spec:
+  storageClassName: vs-class
+  dataSource:
+    name: pvc-snapshot
+    kind: VolumeSnapshot
+    apiGroup: snapshot.storage.k8s.io
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+```
+
+You will endup with another PVC with the same configuration (and content) in the new PVC created:
+
+```shell
+kubo@MJvjY0ETPFqph:~$ kubectl get pvc
+NAME                  STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+windows-pvc   Bound    pvc-2916cdff-f5ca-4d0b-ae97-1abe9ae83f0f   5Gi        RWO            windows        85m
+pvc-restore           Bound    pvc-560324d0-719a-4cb0-bc7c-5181d544bb8f   5Gi        RWO            windows        5s
+```
