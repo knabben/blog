@@ -1,5 +1,5 @@
 +++
-title = "Day 1 - Kubernetes Windows Nodes"
+title = "Kubernetes Windows Nodes"
 description = "Tips and ideas on setting up a development environment for Kubernetes Windows nodes"
 date = "2024-01-04"
 +++

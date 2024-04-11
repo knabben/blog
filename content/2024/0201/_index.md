@@ -1,5 +1,5 @@
 +++
-title = "Day 2 - Kubernetes Container Storage Interface (on Windows & vSphere)"
+title = "Kubernetes vSphere CSI on Windows"
 description = "Tips and ideas on setting up Kubernetes Windows nodes"
 date = "2024-02-01"
 +++
