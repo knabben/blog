@@ -4,6 +4,8 @@ description = "Tips and ideas on setting up a development environment for Kubern
 date = "2024-01-04"
 +++
 
+![tainha](/images/sea/sea6.png?width=230px "tainha")
+
 ### Introduction
 
 On Day 1, after [stepping stones](https://opssec.in/2023/1230/) and setting up a Kubernetes cluster, I was left wondering what to do next. Running mundane workloads on the cluster was definitely not the reason for setting it up in the first place. Instead, I aim to develop Kubernetes, specifically focusing on the Windows node components from this particular environment. 

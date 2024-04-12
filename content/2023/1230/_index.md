@@ -1,8 +1,10 @@
 +++
-title = "Day 0 - Running Windows cluster locally"
+title = "Running Windows cluster locally"
 description = "Challenges on running Hybrid OS clusters on local machines for development propose."
 date = "2023-12-30"
 +++
+
+![tainha](/images/sea/sea6.png?width=230px "tainha")
 
 ## Introduction
 

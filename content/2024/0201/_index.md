@@ -4,6 +4,8 @@ description = "Tips and ideas on setting up Kubernetes Windows nodes"
 date = "2024-02-01"
 +++
 
+![tainha](/images/sea/sea7.png?width=230px "tainha")
+
 ## Introduction
 
 The purpose of the upcoming posts is to discuss Day 2 operations. Assuming that you have a running cluster, we will explore additional capabilities that can be added to ensure smooth operation and management. In particular, this post will focus on CSI and Storage within vSphere (and Windows), although most of the process can be applied to other clouds.
