@@ -70,13 +70,48 @@ Domains contain the logical components to achieve administrative goals in the or
 
 Organizational Units (OU) are subgroups or sub-organizations within a domain, similar to a business unit. When deploying a domain controller, it creates a default OU structure to segment the most common object types, such as users, computers, and domain controllers. Globally unique identifiers such as GUID and security identifiers such as SID are set for each new object created.
 
-Some other components are important, like the Distinguished names (DN) that are used to define a unique path for an object. In the AD schema, there are a lot of attributes to set into the tree in order to segment, organize, and model the actual organization; for example, the commonName attribute is used to represent a name,  domainComponent is the naming attribute for Domain and DNS objects. 
+Some other components are important, like the Distinguished names (DN) that are used to define a unique path for an object. 
+In the AD schema, there are a lot of attributes to set into the tree in order to segment, organize, and model the actual organization; for example, 
+the commonName attribute is used to represent a name,  domainComponent is the naming attribute for Domain and DNS objects. 
 
+```shell
+$ ldapsearch -x -b 'dc=hacktheplanet,dc=com' -H ldap://192.168.39.198 -W -D "cn=Administrator,cn=Users,dc=hacktheplanet,dc=com"
+
+# hacktheplanet.com
+dn: DC=hacktheplanet,DC=com
+objectClass: top
+objectClass: domain
+objectClass: domainDNS
+distinguishedName: DC=hacktheplanet,DC=com
+instanceType: 5
+whenCreated: 20240410001515.0Z
+whenChanged: 20240411231546.0Z
+subRefs: DC=ForestDnsZones,DC=hacktheplanet,DC=com
+subRefs: DC=DomainDnsZones,DC=hacktheplanet,DC=com
+subRefs: CN=Configuration,DC=hacktheplanet,DC=com
+uSNCreated: 4099
+dSASignature:: AQAAACgAAAAAAAAAAAAAAAAAAAAAAAAAuwQ0ugw8nUmd1H5VUPKyIg==
+uSNChanged: 20486
+name: hacktheplanet
+
+PS> Get-UserAD Administrator
+
+
+DistinguishedName : CN=Administrator,CN=Users,DC=hacktheplanet,DC=com
+Enabled           : True
+GivenName         :
+Name              : Administrator
+ObjectClass       : user
+ObjectGUID        : 510d986d-4588-4cb3-b27d-cdee7dcd2aeb
+SamAccountName    : Administrator
+SID               : S-1-5-21-1587599777-1881890648-1557951787-500
+Surname           :
+UserPrincipalName :
 ```
 
-```
+![adexample](./images/adexample.png?width=800px "adexample")
 
-These are the server roles attached to Active Directory 
+These are the server roles attached to Active Directory that need to be installed:
 
 * Active Directory Domain Services
 * Active Directory Federation Services
@@ -84,7 +119,7 @@ These are the server roles attached to Active Directory
 * Active Directory Rights Management Services
 * Active Directory Certificate Services
 
-![adinstall](./images/adinstall.png?width=800px "adinstall")
+![adinstall](./images/adinstall.png?width=600px "adinstall")
 
 The AD is a very long topic, and this post does not aim to provide an extensive introduction to it. Check this [book](https://www.amazon.com/Mastering-Active-Directory-protect-Services/dp/1801070393) for full coverage.
 
