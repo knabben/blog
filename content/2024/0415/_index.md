@@ -6,9 +6,9 @@ date = "2024-04-11"
 
 ![tainha](./images/post.png?width=200px "tainha")
 
-### Kubernetes RBAC
+## Kubernetes RBAC
 
-### Authentication
+### [Authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/)
 
 Kubernetes clusters have two categories of users: human users who access the cluster (and the goal of this post), ServiceAccounts used for machines (or identities providers like SPIFFE), and Pods. 
 
@@ -16,15 +16,11 @@ The complicated part (when starting on Kubernetes) is the lack of a User object,
 
 * x509 client certificates - If a client certificate is presented and verified, the common name of the subject is used as the user name for the request, is necessary to create a CSR, and have it accepted and validated manually.
 * Service account tokens - are automatically enabled and created by the apiserver. They are associated with pods running in the cluster via the Service Account Admission Controller.
-* openID connect tokens is a flavor of Oauth2 supported by OAtuh2 providers, using JWT tokens for authentication.
+* openID connect tokens - a flavor of Oauth2 supported by OAtuh2 providers, using JWT tokens for authentication.
 * Authentication  proxy - can be configured to identify users from request header values.
 
-https://kubernetes.io/docs/reference/access-authn-authz/authentication/
 
-If you want to check how to create users on Kubernetes here is good example article.
-
-https://cormachogan.com/2020/11/06/creating-developer-users-and-namespaces-scripted-in-tkg-guest-clusters/
-
+If you want to check how to create users on Kubernetes here is good example [article](https://cormachogan.com/2020/11/06/creating-developer-users-and-namespaces-scripted-in-tkg-guest-clusters/).
 
 ### RBAC Permissions
 
@@ -76,15 +72,17 @@ Organizational Units (OU) are subgroups or sub-organizations within a domain, si
 
 Some other components are important, like the Distinguished names (DN) that are used to define a unique path for an object. In the AD schema, there are a lot of attributes to set into the tree in order to segment, organize, and model the actual organization; for example, the commonName attribute is used to represent a name,  domainComponent is the naming attribute for Domain and DNS objects. 
 
-example: of the thing being created
+```
+
+```
 
 These are the server roles attached to Active Directory 
 
-- Active Directory Domain Services
-- Active Directory Federation Services
-- Active Directory Lightweight Directory Services
-- Active Directory Rights Management Services
-- Active Directory Certificate Services
+* Active Directory Domain Services
+* Active Directory Federation Services
+* Active Directory Lightweight Directory Services
+* Active Directory Rights Management Services
+* Active Directory Certificate Services
 
 ![adinstall](./images/adinstall.png?width=800px "adinstall")
 

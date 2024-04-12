@@ -6,14 +6,18 @@ date = "2024-01-04"
 
 ![tainha](/images/sea/sea1.png?width=230px "tainha")
 
-### Introduction
+## Introduction
 
 On Day 1, after [stepping stones](https://opssec.in/2023/1230/) and setting up a Kubernetes cluster, I was left wondering what to do next. Running mundane workloads on the cluster was definitely not the reason for setting it up in the first place. Instead, I aim to develop Kubernetes, specifically focusing on the Windows node components from this particular environment. 
 In this post, I would like to share an experimental CLI tool created on SWDT (SIG Windows Dev Tools) that can assist in binary deployment and node configuration with simple syntax and standardized configurations. 
 
 Additionally, I aim to provide concise development workflows that I use daily for testing and validating the newly built custom components. The idea of this toolkit is to provide developers with more robust and reusable mechanisms, as opposed to shell scripts (which are perfectly fine), for managing Windows nodes remotely.
 
-## SWDT subcommand and settings
+## SIG Windows Development Environment
+
+{{% notice update %}}
+UPDATE: A new DEMO in pt-br can find [here](https://www.youtube.com/watch?v=krI6Ivv7zdQ).
+{{% /notice %}}
 
 The SWDT repository contains the [experiment/swdt](https://github.com/kubernetes-sigs/sig-windows-dev-tools/tree/master/experiments/swdt) folder for the POC CLI. 
 There's a great documentation provided by Mateusz Loskot, on how to setup the same Windows cluster using Hyper-V in the project, check if this fits your use case. After compiling with `make build`, the binary will provide a few subcommands. Before looking at the command options, let's explore the configuration format.
