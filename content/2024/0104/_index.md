@@ -4,7 +4,7 @@ description = "Tips and ideas on setting up a development environment for Kubern
 date = "2024-01-04"
 +++
 
-![tainha](/images/sea/sea6.png?width=230px "tainha")
+![tainha](/images/sea/sea1.png?width=230px "tainha")
 
 ### Introduction
 

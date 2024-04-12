@@ -4,7 +4,7 @@ description = "Tips and ideas on setting up Kubernetes Windows nodes"
 date = "2024-02-01"
 +++
 
-![tainha](/images/sea/sea7.png?width=230px "tainha")
+![tainha](/images/sea/sea5.png?width=230px "tainha")
 
 ## Introduction
 
