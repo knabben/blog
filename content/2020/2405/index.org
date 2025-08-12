@@ -191,6 +191,3 @@ https://kubernetes.io/docs/tasks/administer-cluster/kubelet-config-file/
 https://kubernetes.io/docs/tasks/administer-cluster/reconfigure-kubelet/
 https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node/dynamic-kubelet-configuration.md
 
-** Listening
-
-{{< youtube TxLcZ7ro7ok >}}
