@@ -1,0 +1,181 @@
+#+TITLE: From Dev to PoET
+#+DATE: 2019-11-16T01:00:00
+
+** Introduction
+
+DevMode is very cool for development of transaction processors, but when you go to production
+it don't grant a correct fork resolution of your chain, and you can end up with different 
+HEAD in the nodes.
+
+Some Byzantine Fault Tolerant protocols were created to fix this problem, in version 1.0.5 we
+have the famous PoET, when used with SGX (intel protection) it can guarantee the BFT characteristic.
+
+But without it this algorithm becomes Crash Fault Tolerant only, for our proposes
+it's enough. The idea here is to spin up a network with 3 nodes, being the first the node who
+will generate the genesis block and the other peers will sync up with it.
+
+** A Sawtooth 1.0.5 Testnet
+
+Get this Gist with the Kubernetes description:
+
+{{<highlight shell>}}
+wget https://gist.githubusercontent.com/knabben/f84c0e4088868d7f9000a21d42412952/raw/10a71bdb8f0cce67234c4465360868c02174b305/poet.yaml
+{{</highlight>}}
+
+The main containers are the sawtooth-validator, sawtooth-settings-tp and the poet-validator-tp.
+
+{{<highlight shell>}}
+sawadm keygen --force && \
+    
+sawset genesis -k /etc/sawtooth/keys/validator.priv -o config-genesis.batch && \
+
+sawset proposal create \
+      -k /etc/sawtooth/keys/validator.priv \
+      sawtooth.consensus.algorithm=poet \
+      sawtooth.poet.report_public_key_pem=\"$(cat /etc/sawtooth/simulator_rk_pub.pem)\" \
+      sawtooth.poet.valid_enclave_measurements=$(poet enclave measurement) \
+      sawtooth.poet.valid_enclave_basenames=$(poet enclave basename) \
+      -o config.batch && \
+
+poet registration create -k /etc/sawtooth/keys/validator.priv -o poet.batch && \
+
+sawset proposal create \
+  -k /etc/sawtooth/keys/validator.priv \
+  sawtooth.poet.target_wait_time=5 \
+  sawtooth.poet.initial_wait_time=25 \
+  sawtooth.publisher.max_batches_per_block=100 \
+  -o poet-settings.batch && \
+
+sawadm genesis config-genesis.batch config.batch poet.batch poet-settings.batch && \
+sawtooth-validator -vvvv \
+    --endpoint tcp://$SAWTOOTH_0_SERVICE_HOST:8800 \
+    --peering dynamic \
+    --bind component:tcp://eth0:4004 \
+    --bind network:tcp://eth0:8800"
+{{</highlight>}}
+
+The difference here is starting the genesis block with sawtooth.consensus.algorithm=poet proposal 
+in settings + the configuration attributes, pay attention in the poet registration command
+that uses --enclave-module simulator by default.
+
+Our peering is dynamic, and the other nodes are discovered in auto mode.
+
+** Other containers
+
+Besides the validator we need a rest-api, the intkey TP and shell to test the network.
+
+The default way to do this is bring everything in the same Pod with multiple containers
+
+{{<highlight yaml>}}
+  - name: sawtooth-rest-api
+    image: hyperledger/sawtooth-rest-api:1.0.5
+    ports:
+      - name: api
+        containerPort: 8008
+    command:
+      - bash
+    args:
+      - -c
+      - "sawtooth-rest-api -C tcp://$HOSTNAME:4004"}
+{{</highlight>}}
+
+These services connect in the same Pod validator node. So we have 1 Deployment/Pod for each node.
+To create our network just run:
+
+{{<highlight shell>}}
+$ kubectl create -f poet.yaml
+$ kubectl get pods
+
+NAME                          READY   STATUS    RESTARTS   AGE
+sawtooth-0-647cff948-ckzkf    7/7     Running   0          56m
+sawtooth-1-8598d7f975-jjv86   6/6     Running   0          56m
+sawtooth-2-cb4966b64-429zg    6/6     Running   0          56m
+{{</highlight>}}
+
+** Some important highlights
+   
+Lets create some alias to facilitate our life:
+
+{{<highlight shell>}}
+func kex() { 
+   kubectl exec -it $(kubectl get pods --namespace default -l "name=sawtooth-$1" -o jsonpath="{.items[0].metadata.name}") \
+       -c sawtooth-shell bash 
+}
+
+func klg() { 
+   kubectl logs $(kubectl get pods --namespace default -l "name=sawtooth-$1" -o jsonpath="{.items[0].metadata.name}") \
+        -c sawtooth-validator 
+}
+{{</highlight>}}
+
+In the validator-0 or the host who have the Genesis block we can see:
+
+{{<highlight shell>}}
+# Started the genesis block
+genesis] Producing genesis block from /var/lib/sawtooth/genesis.batch
+
+# Listening on 8800 for the gossip networking
+interconnect] Listening on tcp://eth0:8800
+
+# The PoET simulator started internally, in this version we don't need a poet-engine running externally.
+
+publisher] Now building on top of block: 05fd696ccb58faba4f7c5760b9ca57fb824b09c39450ca97679fc037723bd680601c6ca42635c6edac7cf66249405f8b4ea1ab4188e4d932d639f918b438c343
+(block_num:0, state:6819ad7540c2f6d8f5cb25f367de8648cd956163aa3b857ecb074517bee33b62, previous_block_id:0000000000000000)
+consensus_state_store] Create consensus store: /var/lib/sawtooth/poet_consensus_state-02ae8605.lmdb
+poet_key_state_store] Create PoET key state store: /var/lib/sawtooth/poet-key-state-02ae8605.lmdb
+poet_enclave_factory] Load PoET enclave module: sawtooth_poet_simulator.poet_enclave_simulator.poet_enclave_simulator; Target wait time: 5.000000; Initial wait time: 25.0
+00000; Population estimate sample size: 50;
+{{</highlight>}}
+
+For the validator-1 and validator-2 you can see similar initialization:
+
+{{<highlight shell>}}
+publisher] Now building on top of block: 05fd696ccb58faba4f7c5760b9ca57fb824b09c39450ca97679fc037723bd680601c6ca42635c6edac7cf66249405f8b4ea1ab4188e4d932d639f918b438c343
+consensus_state_store] Create consensus store: /var/lib/sawtooth/poet_consensus_state-03829c84.lmdb
+poet_key_state_store] Create PoET key state store: /var/lib/sawtooth/poet-key-state-03829c84.lmdb
+poet_enclave_factory] Load PoET enclave module: sawtooth_poet_simulator.poet_enclave_simulator.poet_enclave_simulator; Target wait time: 5.000000; Initial wait time: 25.000000; Population estimate sample size: 50;
+poet_enclave_simulator] PoET enclave simulator creating anti-Sybil ID from: 2019-11-17T01:05:43.820014                                                                   
+poet_block_publisher] No public key found, so going to register new signup information
+poet_block_publisher] Register Validator Name=validator-03829c84, ID=03829c84...e6e897ef, PoET public key=0264eb69...6eb3df13, Nonce=4ea1ab4188e4d932d639f918b438c343    
+poet_block_publisher] Save key state PPK=0264eb69...6eb3df13 => SSD=eyJjb3Vu...ZjEzIn0=
+{{</highlight>}}
+
+This gensis block from validator-0 was sync on other nodes via peering mode. The chain arrives after GOSSIP_BLOCK_REQUEST HEAD is made.
+
+** Testing our network with Intkey
+
+Find a box with a intkey installed, you can use one of the rest-apis to insert
+a new key on it:
+
+{{<highlight shell>}}
+$ kex 0
+root@ac7b765563e0:/# intkey set abc 100
+root@ac7b765563e0:/# while true; do intkey inc abc 1; sleep 5; done
+
+# After some time check the HEAD of each node:
+
+$ kex 1
+root@sawtooth-1-8598d7f975-kxc4v:/# sawtooth block list
+NUM  BLOCK_ID                                                                                                                          BATS  TXNS  SIGNER
+6    1c2d4d23fd20d7412aa764ee0be13b44aae6e942b0da5b321e7092244012bb92641f76b32eacff6bee7b7da41e789f0c10706d8860bf7eca97f781176aba8c79  1     1     028c7b9084dbe585f0bff105711487489a8fb5feda406a33cf5e24
+
+$ kex 0
+root@sawtooth-0-647cff948-bs4p5:/# sawtooth block list
+NUM  BLOCK_ID                                                                                                                          BATS  TXNS  SIGNER
+10   3a1fbae4391d1fd2109751b241cc836188ee8dc262c4c9be53fc68c181650f474f950967d0cc6a4f587635aaf1d9d3ab1cc8179c47da6690e946d592049bb8e8  1     1     028c7b9084dbe585f0bff105711487489a8fb5feda406a33cf5e24
+
+$ kex 2
+root@sawtooth-2-cb4966b64-9wfxs:/# sawtooth block list
+NUM  BLOCK_ID                                                                                                                          BATS  TXNS  SIGNER
+10   3a1fbae4391d1fd2109751b241cc836188ee8dc262c4c9be53fc68c181650f474f950967d0cc6a4f587635aaf1d9d3ab1cc8179c47da6690e946d592049bb8e8  1     1     028c7b9084dbe585f0bff105711487489a8fb5feda406a33cf5e24
+{{</highlight>}}
+
+** Conclusion 
+
+The version 1.0.5 still have the consensus mechanism coupled in sawtooth-core, this only changed after 1.1, but for sure the recommended version is latest 1.2.3. 
+The other trick part here (if you get the Kubernetes/Docker from newer versions) is the change from sawtooth.consensus.algorithm=poet to sawtooth.consensus.algorithm.name=poet
+settings in newer version, since the system gives you no hints from this problem, and only rolls back to DevMode.
+
+** Listening 
+
+{{< youtube ibQq1FZITMc >}}

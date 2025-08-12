@@ -1,0 +1,384 @@
+#+TITLE: Sawtooth Cheatsheet
+#+DATE: 2019-12-15
+
+*** Installation
+**** Ubuntu
+
+ For local ubuntu Installation is being used Ubuntu Xenial - 16.04 LTS, via vagrant
+
+{{<highlight shell>}}
+$ vagrant init ubuntu/xenial64
+$ vagrant up
+{{</highlight>}}
+
+ After the box is up we need to add the correct repository:
+
+{{<highlight shell>}}
+$ sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 8AA7AF1F1091A5FD
+$ sudo add-apt-repository 'deb http://repo.sawtooth.me/ubuntu/1.0/stable xenial universe'
+$ sudo apt update
+{{</highlight>}}
+
+ Install the package:
+
+{{<highlight shell>}}
+$ sudo apt install -y sawtooth
+{{</highlight>}}
+
+**** Docker
+
+ Install Docker adding key and repo:
+
+{{<highlight shell>}}
+$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+$ sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+$ sudo apt update
+$ sudo apt install -y docker-ce docker-compose
+{{</highlight>}}
+
+*** Starting components services
+**** Ubuntu
+    
+ Systemd is the default init system for many Linux distributions, init system is also used to manage serviecs and daemons 
+ for the server at any point while the system is running.
+
+ Targets on systemd are called units, resourcers that systemd knows how to manage. Units are categorized by the type of 
+ resource they represent and they are defined with files know as unit files. To list all Units files inside the system use:
+
+{{<highlight shell>}}
+sudo systemctl list-unit-files | grep sawtooth
+{{</highlight>}}
+
+ To fetch the ones running
+
+{{<highlight shell>}}
+sudo systemctl list-unit
+{{</highlight>}}
+
+ By default they are not enabled or started by default, to start a the *Sawtooth validator* service:
+
+{{<highlight shell>}}
+$ sudo systemctl start sawtooth-validator.service
+{{</highlight>}}
+
+ To stop the Sawtooth Validator use:
+
+{{<highlight shell>}}
+$ sudo systemtl stop sawtooth-validator.service
+{{</highlight>}}
+
+ To start the service use enable/disable, same works for reload/restart
+
+ Finally to check the status:
+
+{{<highlight shell>}}
+$ systemctl status sawtooth-validator.service
+{{</highlight>}}
+
+**** Docker
+
+ Pieces can be found in docker-compose file.
+
+{{<highlight shell>}}
+https://sawtooth.hyperledger.org/docs/core/releases/1.0/app_developers_guide/sawtooth-default.yaml
+{{</highlight>}}
+
+ The images that follows are:
+
+{{<highlight shell>}}
+hyperledger/sawtooth-settings-tp:1.0
+hyperledger/sawtooth-intkey-tp-python:1.0
+hyperledger/sawtooth-xo-tp-python:1.0
+hyperledger/sawtooth-validator:1.0
+
+with the command:
+
+ sawadm keygen && \
+        sawtooth keygen my_key && \
+        sawset genesis -k /root/.sawtooth/keys/my_key.priv && \
+        sawadm genesis config-genesis.batch && \
+        sawtooth-validator -vv \
+          --endpoint tcp://validator:8800 \
+          --bind component:tcp://eth0:4004 \
+          --bind network:tcp://eth0:8800 \
+
+hyperledger/sawtooth-rest-api:1.0
+hyperledger/sawtooth-all:1.0
+{{</highlight>}}
+
+*** Generate keys
+**** Validator keys
+
+{{<highlight shell>}}
+$ sawadm keygen 
+/etc/validator/keys/validator.pub
+/etc/validator/keys/validator.priv
+{{</highlight>}}
+
+**** User keys
+
+{{<highlight shell>}}
+$ sawtooth keygen
+~/.sawtooth/keys/
+{{</highlight>}}
+
+*** Create a genesis block
+
+ Create the genesis blocks
+
+{{<highlight shell>}}
+$ sawset genesis -k /root/.sawtooth/my_priv.key
+config-genesis.batch
+
+$ sawadm genesis config-gensis.batch
+/var/lib/sawtooth/genesis.batch
+{{</highlight>}}
+
+*** Register a validator
+
+ After creating the genesis.batch:
+
+{{<highlight shell>}}
+$ systemctl start sawtooth-validator.services
+{{</highlight>}}
+
+*** Verify installation and fix problems
+
+{{<highlight shell>}}
+/etc/default/sawtooth-validator
+
+journalctl -u sawtooth-settings-tp -u sawtooth-validator
+
+ $ journalctl -u sawtooth-validator
+
+genesis] genesis_batch_file: /var/lib/sawtooth/genesis.batch
+genesis] block_chain_id: not yet specified
+genesis] Producing genesis block from /var/lib/sawtooth/genesis.batch
+genesis] Adding 1 batches
+executor] no transaction processors registered for processor type sawtooth_settings: 1.0
+executor] Waiting for transaction processor (sawtooth_settings, 1.0)
+
+/etc/default/sawtooth-validator
+{{</highlight>}}
+
+*** Connect TP to a validator
+
+{{<highlight shell>}}
+$ systemctl start sawtooth-settings-tp.services
+processor_handlers] registered transaction processor: connection_id=1, family=sawtooth_settings, version=1.0, namespaces=['000000']
+{{</highlight>}}
+
+*** Verify system meets hardware, requirements
+
+{{<highlight shell>}}
+ps
+top
+{{</highlight>}}
+
+** Configuration
+
+*** Configure validator peering and network
+
+ --peers tcp://127.0.0.1:8800 for static and --seeds for dynamic
+
+*** Configure consensus (?)
+
+{{<highlight shell>}}
+For PoET 
+
+sawset proposal create -k /etc/sawtooth/keys/validator.priv \
+sawtooth.consensus.algorithm=poet \
+sawtooth.poet.report_public_key_pem="$(cat /etc/sawtooth/ias_rk_pub.pem)" \
+sawtooth.poet.valid_enclave_measurements=$(poet enclave --enclave-module sgx measurement) \
+sawtooth.poet.valid_enclave_basenames=$(poet enclave --enclave-module sgx basename) \
+sawtooth.poet.enclave_module_name=sawtooth_poet_sgx.poet_enclave_sgx.poet_enclave \
+-o config.batch
+{{</highlight>}}
+
+*** Configure logging
+
+ Can be found in: /etc/sawtooth/log_config
+
+*** Configure REST API
+
+ Starting the REST API can be made via Ubuntu systemd scripts or by hand
+
+{{<highlight shell>}}
+$ sudo systemctl start sawtooth-rest-api.service
+{{</highlight>}}
+
+ Configuration for the service is made at /etc/default/sawtooth-rest-api
+ To set another port of validator node set --conect tcp://localhost:4004
+
+*** Configure L3 network ports/firewall
+
+ iptables 
+
+*** Configure metrics
+
+ Setup InfluxDb - https://knabben.github.io/posts/sawtooth-grafana/
+
+*** Configure transaction processor endpoint
+
+{{<highlight shell>}}
+In the TP to connect use: -C tcp://localhost:4004
+In the validator-process set: --bind component:tcp://127.0.0.1:4004
+{{</highlight>}}
+
+*** Configure systemd services
+
+{{<highlight shell>}}
+Systemd services setup
+{{</highlight>}}
+
+*** Choose parallel/sync scheduler
+
+{{<highlight shell>}}
+sudo -u sawtooth sawtooth-validator -vv --scheduler parallel || serial
+{{</highlight>}}
+
+*** Configure storage paths
+
+{{<highlight shell>}}
+/etc/sawtooth/path.toml
+
+  key_dir
+  data_dir
+  log_dir
+  policy_dir
+{{</highlight>}}
+
+*** Configure sawtooth cli
+
+{{<highlight shell>}}
+/etc/sawtooth/cli.toml
+{{</highlight>}}
+
+** Lifecycle
+
+*** Create new network
+
+start the validators using Peering static or dynamic, with the first node with genesis block.
+
+*** Joining an existing network
+
+set --peers on all nodes
+
+*** Remove validator node from the network
+
+remove --peers value from the nodes, and turn the daemon off
+
+*** Rejoin network after network failure
+
+restart the sawtooth-validator
+
+*** Changing consensus mode
+
+{{<highlight shell>}}
+sawset proposal create -k /etc/sawtooth/keys/validator.priv sawtooth.consensus.algorithm=dev
+{{</highlight>}}
+
+*** Restart validator after crash or maintenance
+
+{{<highlight shell>}}
+sudo systemctl restart sawtooth-validator
+{{</highlight>}}
+   
+*** Restart component after crash or maintenance
+
+{{<highlight shell>}}
+sudo systemctl restart sawtooth-rest-api
+sudo systemctl restart sawtooth-settings-tp
+{{</highlight>}}
+
+*** Add new transaction processor
+
+ Set transaction processor connection to validator 4004 connect
+
+*** Change network configuration
+
+ Edit configuration on /etc/sawtooth/validators.toml
+   
+*** Update sawtooth software
+
+{{<highlight shell>}}
+sudo apt-get upgrade
+{{</highlight>}}
+
+*** Update transaction processor version
+
+{{<highlight shell>}}
+sudo apt-get install sawtooth*
+{{</highlight>}}
+   
+**  Permissioning, Identity Management and Security
+
+*** Identify network ID / system / peer ID
+
+ cat /etc/sawtooth/keys/validator.pub
+
+*** Permission a transaction processor
+
+https://knabben.github.io/posts/sawtooth-permission/
+
+{{<highlight shell>}}
+$ sawtooth-identity
+{{</highlight>}}
+
+*** Policy management
+
+{{<highlight shell>}}
+$ sawtooth identity policy create policy "DENY_KEY *"
+{{</highlight>}}
+
+*** Validator registration
+
+{{<highlight shell>}}
+$ sawset proposal create sawtooth.identity.allowed_keys
+{{</highlight>}}
+
+*** System permissions
+
+Network identity 
+
+*** Configure validator local policy file
+
+On policy_dir must create the correct policy_name file.
+
+*** Validator key permission
+
+Trust and challenge authorization types.
+
+*** Role management: transactor roles
+
+{{<highlight shell>}}
+sawtooth identity role transactor policy_name
+{{</highlight>}}
+
+*** Role management: network roles
+
+{{<highlight shell>}}
+sawtooth identity role network policy_name
+{{</highlight>}}
+
+*** Configure transactor permissions
+
+{{<highlight shell>}}
+/etc/sawtooth/validator.toml - for off-chain use the configuration file:
+
+[permissions] ROLE = POLICY_NAME
+policy_dir - policy_name
+{{</highlight>}}
+
+*** Secure connections between components/validators
+
+*** Use a proxy server to authorize the REST API
+
+ Apache and Nginx
+
+*** Manage validator keys and secrets
+
+{{<highlight shell>}}
+$ sawset proposal create sawtooth.identity.allowed_keys=xxx
+{{</highlight>}}
+
