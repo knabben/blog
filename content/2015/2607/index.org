@@ -1,7 +1,6 @@
 #+TITLE: Tsung Capacity Test
 #+DATE: 2015-07-26T00:00:00Z
 
-
 ** Introduction
 
  In this post we are going to analyze a very interesting Erlang distributed load testing tool, called *Tsung* [1]. 
