@@ -1,0 +1,213 @@
+#+TITLE: CPython Debugging
+#+DATE: 2016-04-16T00:00:00Z
+
+** Introduction 
+
+Python Weekly this week bring a very cool article [1] about GDB and Python, so I thought it was a great opportunity to get into Python internals, the idea here is to understand (in more details) how Python executes your scripts and how it calls code functions.
+
+The code is very simple, and uses the random module with two built-in functions (range and sorted), the question is: Can we via GDB see the stack of it? Check it out!
+
+** The bytecode
+
+From the Python glossary:
+
+Python source code is compiled into bytecode, the internal representation of a Python program in the CPython interpreter. The bytecode is also cached in .pyc and .pyo files so that executing the same file is faster the second time (recompilation from source to bytecode can be avoided). This “intermediate language” is said to run on a virtual machine that executes the machine code corresponding to each bytecode.
+
+We can get the bytecode from Python with the dis module:
+
+{{<highlight python>}}
+import dis
+import random
+
+def gen_random():
+    return sorted([random.randint(1, 10) for i in range(1, 10)])
+
+dis.dis(gen_random)
+
+
+6	      0 LOAD_GLOBAL              0 (sorted)
+		  3 BUILD_LIST               0
+		  6 LOAD_GLOBAL              1 (range)
+		  9 LOAD_CONST               1 (1)
+		 12 LOAD_CONST               2 (10)
+		 15 CALL_FUNCTION            2
+		 18 GET_ITER
+ 		 19 FOR_ITER                24 (to 46)
+		 22 STORE_FAST               0 (i)
+		 25 LOAD_GLOBAL              2 (random)
+		 28 LOAD_ATTR                3 (randint)
+		 31 LOAD_CONST               1 (1)
+		 34 LOAD_CONST               3 (10)
+		 37 CALL_FUNCTION            2
+		 40 LIST_APPEND              2
+		 43 JUMP_ABSOLUTE           19
+		 46 CALL_FUNCTION            1
+		 49 RETURN_VALUE
+{{</highlight>}}
+
+Here we have the bytecode that will be translated to our frame. LOAD_GLOBAL starts the function, BUILD_LIST creates a new list for the comprehension with 0 len, LOAD_CONST starts the args, it starts with the range function, storing the value of the iterator on i, after that random.randint is called CALL_FUNCTION, we are going to debug and focus on the call_function method.
+
+** Python Main
+
+I am using the Python 2.7.9, on Misc folder you can get the ~/.gdbinit file to give you some shortcuts on gdb, you can set a breakpoint on the main.c
+
+{{<highlight bash>}}
+gdb --args python gen_random.py
+
+gdb> b Py_Main
+gdb> r
+{{</highlight>}}
+
+We are running stuff from the command line so we hit the flow PyRun_AnyFileExFlags -> PyRun_SimpleFileExFlags (pythonrun.c), We can see something interesting like CPython trying to open the bytecode file first:
+
+{{<highlight c>}}
+pythonrun.c:936
+
+ if (maybe_pyc_file(fp, filename, ext, closeit)) {
+   /* Try to run a pyc file. First, re-open in binary */
+{{</highlight>}}
+
+We dont have the pyc yet, so the interpreter goes to PyRun_FileExFlags, do a (bt) command, and see that if you do a py-bt, you have nothing yet.
+
+{{<highlight c>}}
+0  PyRun_FileExFlags () at ../Python/pythonrun.c:1349
+1  0x081302f5 in PyRun_SimpleFileExFlags () at ../Python/pythonrun.c:949
+2  0x080daa21 in Py_Main () at ../Modules/main.c:640
+3  0x080da48b in main (argc=2, argv=0xbffff994) at ../Modules/python.c:23
+{{</highlight>}}
+
+Cool, looks like we are almost running it, on PyParser_ASTFromFile, the interpreter is parsing the tree structure on Python syntax, it is called AST (Abstract Syntax Tree). Next, we hit the run_mod function:
+
+{{<highlight c>}}
+static PyObject *
+run_mod(mod_ty mod, const char *filename, PyObject *globals, PyObject *locals,
+         PyCompilerFlags *flags, PyArena *arena)
+{
+    PyCodeObject *co;
+    PyObject *v;
+    co = PyAST_Compile(mod, filename, flags, arena);
+    if (co == NULL)
+        return NULL;
+    v = PyEval_EvalCode(co, globals, locals);
+    Py_DECREF(co);
+    return v;
+}
+{{</highlight>}}
+
+** Python Frame
+
+Besides the PyAST_Compile we have the frame execution here: PyEval_EvalCode -> PyEval_EvalCodeEx -> PyEval_EvalFrameEx, here the magic happens, it gets all opcodes and creates a StackFrame from it, inside the EvalFrameEx we have a for(;;) loop and a switch(opcode) that iterates on all opcodes:
+
+{{<highlight c>}}
+(gdb) bt
+0  PyEval_EvalFrameEx () at ../Python/ceval.c:1100
+1  0x08105f95 in PyEval_EvalCodeEx () at ../Python/ceval.c:3265
+2  0x0813a3ec in PyEval_EvalCode (
+    locals={"__builtins__":  ,"__file__": "teste.py", ...
+    globals={"__builtins__": ,"__file__": "teste.py", ...
+3  run_mod.lto_priv () at ../Python/pythonrun.c:1371
+4  0x08131148 in PyRun_FileExFlags () at ../Python/pythonrun.c:1357
+5  0x081302f5 in PyRun_SimpleFileExFlags () at ../Python/pythonrun.c:949
+6  0x080daa21 in Py_Main () at ../Modules/main.c:640
+7  0x080da48b in main (argc=2, argv=0xbffff994) at ../Modules/python.c:23
+{{</highlight>}}
+
+On a CALL_FUNCTION opcode we have the call_function method, it have two branches a "PyCFunction_Check" for C functions and for Python methods "PyMethod_GET_FUNCTION".
+
+You can put a breakpoint on call_function after PyCFunction_Check. the first thing to be loaded on our code is the import random, and all the submodules like openssl, nothing very interesting here.
+
+{{<highlight c>}}
+breakpoint 2, call_function (oparg=, pp_stack=) at ../Python/ceval.c:4010
+4010            PyThreadState *tstate = PyThreadState_GET();
+(gdb) py-bt
+### -- Garbage from submodules dependencies
+1 Frame 0xb7c93194, for file /usr/lib/python2.7/hashlib.py, line 102, ...
+    f = getattr(_hashlib, "openssl_" + name)
+4 Frame 0xb7cfa5ac, for file /usr/lib/python2.7/hashlib.py, line 147, in <module> ()
+    globals()[__func_name] = __get_hash(__func_name)
+16 Frame 0xb7cd253c, for file /usr/lib/python2.7/random.py, line 49, in <module> ()
+    import hashlib as _hashlib
+28 Frame 0xb7d10d4c, for file teste.py, line 1, in <module> ()
+    import random
+
+(gdb) bt
+### -- Top of the call_function, here it will choose what to run based on the AST code
+0  call_function (oparg=<>, pp_stack=<>) at ../Python/ceval.c:4010
+1  PyEval_EvalFrameEx () at ../Python/ceval.c:2679
+2  0x081078bb in fast_function (nk=<>, na=...
+    func=<optimized out>) at ../Python/ceval.c:4119
+3  call_function (oparg=<optimized out>, ...
+4  PyEval_EvalFrameEx () at ../Python/ceval.c:2679
+5  0x08105f95 in PyEval_EvalCodeEx () at ../Python/ceval.c:3265
+6  0x08105952 in PyEval_EvalCode (co=0xb7ca4410,
+
+{{</highlight>}}
+
+** Modules and built-in
+
+Hit some continue gdb commands, you can see the __init__ seeding the random module.
+
+{{<highlight c>}}
+(gdb) py-bt
+1 Frame 0xb7c93194, for file /usr/lib/python2.7/random.py, line 118, in seed
+    super(Random, self).seed(a)
+5 Frame 0xb7cf258c, for file /usr/lib/python2.7/random.py, line 97, in __init__
+    self.seed(x)
+16 Frame 0xb7cd253c, for file /usr/lib/python2.7/random.py, line 885, in <module> ()
+    _inst = Random()
+{{</highlight>}}
+
+Keep digging! We are going to get some built-in functions, lets say: sorted.
+
+It is a built-in method so the bt-py keeps on the oneline frame, but C backtrace hits the bltinmodule.c via a call_function.
+
+{{<highlight c>}}
+(gdb) py-bt
+2 Frame 0xb7c93464, for file teste.py, line 4, in gen_random (i=1)
+    return sorted([random.randint(1, 10) for i in range(1,2)])
+5 Frame 0xb7d10d4c, for file teste.py, line 6, in <module> ()
+    print(gen_random())
+
+(gdb) bt
+0  builtin_sorted.lto_priv () at ../Python/bltinmodule.c:2217
+1  0x0810739d in call_function (oparg=<>, pp_stack=<>) at ../Python/ceval.c:4033
+2  PyEval_EvalFrameEx () at ../Python/ceval.c:2679
+{{</highlight>}}
+
+Thats very interesting, this buildin_sorted comes from:
+
+{{<highlight c>}}
+Python/ceval.c - call_function
+
+C_TRACE(x, PyCFunction_Call(func,callargs,NULL))
+
+On Objects/methodobject.c - PyCFunction_call
+
+PyCFunction meth = PyCFunction_GET_FUNCTION(func);
+case METH_OLDARGS | METH_KEYWORDS:
+	return (*(PyCFunctionWithKeywords)meth)(self, arg, kw);
+
+{{</highlight>}}
+
+The bltinmodule.c:buildin_sorted:2245 function now calls a PyObject_Call with our list as a parameter for the method listsort.
+
+After more walkthrough, we can get the algorithm that Python uses to order lists: Objects/listobject.c (listsort)
+
+{{<highlight c>}}
+/* An adaptive, stable, natural mergesort.  See listsort.txt.
+ * Returns Py_None on success, NULL on error.  Even in case of error, the
+ * list will be some permutation of its input state (nothing is lost or
+ * duplicated).
+ */
+
+0  listsort.lto_priv () at ../Objects/listobject.c:2069
+1  0x0816f4d1 in PyObject_Call (kw=0x0, arg=(), func=<>) at ../Objects/abstract.c:2529
+2  builtin_sorted.lto_priv () at ../Python/bltinmodule.c:2245
+3  0x0810739d in call_function (oparg=<optimized out>, pp_stack=<optimized out>) at ../Python/ceval.c:4033
+{{</highlight>}}
+
+** Reference
+
+**** [1] http://podoliaka.org/2016/04/10/debugging-cpython-gdb/
+**** [2] https://wiki.python.org/moin/DebuggingWithGdb
+**** [3] http://fedoraproject.org/wiki/Features/EasierPythonDebugging

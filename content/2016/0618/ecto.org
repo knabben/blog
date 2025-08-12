@@ -1,0 +1,295 @@
+#+TITLE: Ecto vs. Django ORM
+#+DATE: 2016-06-18
+
+
+** Introduction
+
+Django [1] is awesome, it applies a lot of design patterns in different layers. First of you have the model layer, or the abstraction layer (models), you can define models that maps to the tables of your database. We are going to see some features that the Django ORM offers.
+
+On the other side, Phoenix Framework [2] is a web framework written in Elixir, it applies the MVC pattern too, and have Ecto as a "language integrated query composition tool" and a database wrapper. There is nothing really new on this post blog, is just a basic scaffold of how to use some functionalities of each project, you can find more on both projects documentation.
+
+
+** Connection and database initialization
+
+*** Django
+
+To start a new app create a virtualenv and install django:
+
+{{<highlight shell>}}
+$ workon app
+app$ pip install django
+app$ django-admin startproject app ; cd app
+{{</highlight>}}
+
+Configure the database on app/settings.py:
+
+{{<highlight python>}}
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'django',
+        'HOST': '192.168.0.4',
+        'USER': 'django',
+        'PASSWORD': 'django'
+    }
+}
+{{</highlight>}}
+
+Sync your database with the models (you dont have any for now):
+
+{{<highlight shell>}}
+$ python manage.py syncdb
+Operations to perform:
+  Apply all migrations: admin, contenttypes, auth, sessions
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying sessions.0001_initial... OK
+
+You have installed Django's auth system, and don't have any superusers defined.
+Would you like to create one now? (yes/no): yes
+Username (leave blank to use 'ndb'): ndb
+Email address: ndb@ndb.com
+Password:
+Password (again):
+Superuser created successfully.
+{{</highlight>}}
+
+Django creates 10 tables, it contains auth_user/auth_group for authentication, django_session and django_migrations.
+
+
+*** Ecto
+
+{{<highlight shell>}}
+$ mix phoenix.new app2
+{{</highlight>}}
+
+Open the config/dev.exs
+
+{{<highlight elixir>}}
+# Configure your database
+config :app2, App2.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  username: "elixir",
+  password: "elixir",
+  database: "app2_dev",
+  hostname: "192.168.0.4",
+  pool_size: 10
+{{</highlight>}}
+
+Create the database, there's no default databases:
+
+{{<highlight shell>}}
+$ mix ecto.create
+{{</highlight>}}
+
+** The first model
+
+*** Django
+
+We are going to create two simple tables via the ORM, with a very whacky example: Album and Music
+
+{{<highlight shell>}}
+$ django-admin startapp recorder
+{{</highlight>}}
+
+{{<highlight python>}}
+app/settings.py:
+
+INSTALLED_APPS = (
+    ...
+    'recorder'
+)
+
+app/recorder/models.py:
+
+from django.db import models
+
+class Album(models.Model):
+    name = models.CharField(max_length=100)
+    producer = models.CharField(max_length=100)
+
+class Music(models.Model):
+    album = models.ForeignKey(Album)
+    name = models.CharField(max_length=200)
+{{</highlight>}}
+
+The next step is to create a migration and create the tables on database, Django have some very cool tools to make it:
+
+{{<highlight shell>}}
+# Create migrate file
+$ django-admin makemigrations
+
+Migrations for 'recorder':
+  0001_initial.py:
+    - Create model Album
+    - Create model Music
+
+# List migrations
+$ django-admin migrate -l
+recorder
+ [ ] 0001_initial
+
+# Print SQL data
+$ django-admin sqlmigrate recorder 0001_initial
+
+BEGIN;
+CREATE TABLE "recorder_album" ("id" serial NOT NULL PRIMARY KEY, "name" varchar(100) NOT NULL, "producer" varchar(100) NOT NULL);
+CREATE TABLE "recorder_music" ("id" serial NOT NULL PRIMARY KEY, "name" varchar(200) NOT NULL, "album_id" integer NOT NULL);
+ALTER TABLE "recorder_music" ADD CONSTRAINT "recorder_music_album_id_511dc046afa6a74a_fk_recorder_album_id" FOREIGN KEY ("album_id") REFERENCES "recorder_album" ("id") DEFERRABLE INITIALLY DEFERRED;
+CREATE INDEX "recorder_music_95c3b9df" ON "recorder_music" ("album_id");
+
+# Apply the migrations (run SQL)
+$ django-admin migrate
+{{</highlight>}}
+
+*** Ecto
+
+With Ecto we create the models via command line, we can generate CRUD templates and controllers with phoenix.gen.html, but for new lets analyse the models:
+
+{{<highlight shell>}}
+$ mix phoenix.gen.model Album album name:string producer:string
+* creating web/models/album.ex
+* creating test/models/album_test.exs
+* creating priv/repo/migrations/20160618120835_create_album.exs
+
+Remember to update your repository by running migrations:
+
+    $ mix ecto.migrate
+
+$ mix phoenix.gen.model Music music name:string album_id:references:album
+* creating web/models/music.ex
+* creating test/models/music_test.exs
+* creating priv/repo/migrations/20160618120923_create_music.exs
+
+Remember to update your repository by running migrations:
+
+    $ mix ecto.migrate
+{{</highlight>}}
+
+As you can see phoenix created the models, a unit test file and a migration file, it created a schema_migration tables to hold this difference either.
+
+We have created a one-to-one relationship, so you can see a belongs_to.
+
+{{<highlight elixir>}}
+defmodule App2.Music do
+  use App2.Web, :model
+
+  schema "music" do
+    field :name, :string
+    belongs_to :album, App2.Album
+
+    timestamps
+  end
+  ...
+end
+{{</highlight>}}
+
+Run your migrate command to create the tables on the database, there's lots of boilerplate code :
+
+{{<highlight shell>}}
+$ mix ecto.migrate
+...
+11:37:34.299 [info]  == Running App2.Repo.Migrations.CreateMusic.change/0 forward
+
+11:37:34.299 [info]  create table music
+
+11:37:34.444 [info]  create index music_album_id_index
+{{</highlight>}}
+
+
+** Insert and get data
+
+Install ipython on your virtualenv and give a try:
+
+*** Django
+
+{{<highlight python>}}
+$ django-admin shell
+
+In [3]: from recorder.models import Album
+
+# Basic insert
+
+In [4]: album1 = Album.objects.create(name="new_album", producer="old_prod")
+Out[4]: <Album: Album object>
+
+# Fetch all
+
+In [5]: map(lambda x: x.name, Album.objects.all())
+Out[5]: ['new_album']
+
+# Create with one-to-one relationship
+
+In [6]: music1 = Music.objects.create(album=album1, name="new_music")
+Out[6]: <Music: Music object>
+
+# Filter by LIKE
+
+In[7]: music2 = Music.objects.filter(name__contains='new').order_by('id')
+# SELECT "recorder_music"."id", "recorder_music"."album_id",
+#        "recorder_music"."name" FROM "recorder_music"
+# WHERE UPPER("recorder_music"."name"::text)
+# LIKE UPPER('%new%') ORDER BY "recorder_music"."id" ASC LIMIT 21
+
+# Fetch related data with default INNER JOIN
+
+In[8]: music3 = Music.objects.select_related('album').get(pk=1).name
+# SELECT "recorder_music"."id", "recorder_music"."album_id",
+#        "recorder_music"."name", "recorder_album"."id",
+#        "recorder_album"."name", "recorder_album"."producer"
+# FROM "recorder_music"
+# INNER JOIN "recorder_album" ON ( "recorder_music"."album_id" = "recorder_album"."id" )
+# ORDER BY "recorder_music"."id" ASC LIMIT 1
+{{</highlight>}}
+
+*** Ecto
+
+{{<highlight elixir>}}
+$ iex -S mix
+
+# Basic insert
+
+iex(1)> album1 = App2.Repo.insert!(%App2.Album{name: "new_album", producer: "old_prod"})
+
+# Fetch all
+
+iex(2)> App2.Album.Repo.All(App3.Album) |> Enum.map(fn(x) -> x.name end)
+["new_album"]
+
+# Create with one-to-one relationship
+
+iex(3)> App2.Repo.insert!(%App3.Music{album_id: album1.id, name: "new_album"})
+# INSERT INTO "music" ("inserted_at", "updated_at", "album_id", "name") VALUES ($1, $2, $3, $4)
+
+# Filter by LIKE
+
+iex(4)> App2.Repo.all(from p in App2.Album, where: like(p.name, ~s'%new%') , select: p, order_by: p.id)
+# SELECT a0."id", a0."name", a0."producer", a0."inserted_at", a0."updated_at"
+# FROM "album" AS a0 WHERE (a0."name" LIKE '%new%') ORDER BY a0."id"
+
+# Fetch related data
+iex(5)> music2 = App2.Repo.get Music, 1 |> App2.Repo.preload(:album)
+iex(6)> IO.puts music2.album.name
+# SELECT m0."id", m0."name", m0."album_id", m0."inserted_at", m0."updated_at"
+# FROM "music" AS m0 WHERE (m0."id" = $1)
+# SELECT a0."id", a0."name", a0."producer", a0."inserted_at", a0."updated_at"
+# FROM "album" AS a0 WHERE (a0."id" IN ($1))
+{{</highlight>}}
+
+
+** Conclusion
+
+Python have a very strong codebase for  ORMs, see Django ORM and SQLAlchemy, but is very interesting see how new languages are solving the ORM situation and how they are evolving.
+
+It can take time to develop the same cool features that old projects have, but the community of Elixir is getting bigger and bigger. As a counterpart complex problems take time to get in shape, and some of them can stay without a solution after a long time. [3]
+
+The subject is very complex, and again, cool to see projects like Ecto or Gorm [4] getting traction. Keep an eye on it and help as you can!
+
+** Biliography
+
+**** [1] http://www.phoenixframework.org
+**** [2] https://www.djangoproject.com/
+**** [3] https://code.djangoproject.com/ticket/10060
+**** [4] http://jinzhu.me/gorm/
